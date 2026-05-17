@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "ThermoGo",
+    "slug": "thermogo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon-nav.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/icon-nav.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#006C95"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.thermogo.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon-nav.png",
+        "backgroundColor": "#006C95"
+      },
+      "package": "com.thermogo.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/icon-nav.png",
+      "name": "ThermoGo",
+      "shortName": "ThermoGo",
+      "themeColor": "#006C95",
+      "backgroundColor": "#006C95",
+      "description": "Monitor your temperature and humidity sensors in real time."
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2e48eb78-3241-46bc-bda0-e79dc29914a2"
+      }
+    },
+    "owner": "bachabey"
+  }
+}
