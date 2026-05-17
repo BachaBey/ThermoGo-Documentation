@@ -1,0 +1,2378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ThermoGo — Medicines Monitoring System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --blue:#267897;
+  --dark:#0E1217;
+  --white:#FFFFFF;
+  --b10:rgba(38,120,151,.10);
+  --b20:rgba(38,120,151,.20);
+  --b30:rgba(38,120,151,.30);
+  --glow:0 0 24px rgba(38,120,151,.12);
+  --ease:cubic-bezier(0.16,1,0.3,1);
+}
+
+html{scroll-behavior:auto;overflow-x:hidden;-webkit-text-size-adjust:100%}
+body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+*{-webkit-tap-highlight-color:transparent}
+
+#bg-canvas{
+  position:fixed;top:0;left:0;
+  width:100%;height:100%;
+  z-index:0;pointer-events:none;
+}
+
+/* ── NAV ─────────────────────────────────────────────────────────── */
+.nav-logo{
+  position:fixed;top:1.75rem;left:2rem;
+  font-size:13px;font-weight:700;
+  letter-spacing:.18em;color:var(--blue);
+  text-transform:uppercase;z-index:200;
+  opacity:0;
+}
+
+/* ── SECTIONS ────────────────────────────────────────────────────── */
+.section{
+  position:relative;z-index:1;
+  width:100%;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+}
+
+.container{max-width:1200px;width:100%;margin:0 auto;padding:0 2.5rem}
+
+/* ── HERO ────────────────────────────────────────────────────────── */
+#section-hero{background:transparent}
+
+.hero-inner{
+  position:absolute;top:22%;left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;width:100%;
+  padding:0 2rem;
+}
+
+.hero-title{
+  font-size:76px;font-weight:800;
+  color:var(--dark);line-height:1.05;
+  letter-spacing:-.025em;
+}
+
+.hero-subtitle{
+  margin-top:.9rem;
+  font-size:13px;font-weight:500;
+  letter-spacing:.22em;color:var(--blue);
+  text-transform:uppercase;
+}
+
+.hero-date{
+  margin-top:.45rem;
+  font-size:13px;color:rgba(14,18,23,.35);
+  letter-spacing:.08em;
+}
+
+.scroll-hint{
+  position:absolute;bottom:2.5rem;left:50%;
+  transform:translateX(-50%);
+  font-size:12px;color:rgba(14,18,23,.35);
+  letter-spacing:.12em;text-transform:uppercase;
+  animation:bounce 2.2s ease-in-out infinite;
+}
+
+@keyframes bounce{
+  0%,100%{transform:translateX(-50%) translateY(0)}
+  50%{transform:translateX(-50%) translateY(7px)}
+}
+
+/* ── SECTION NUMBERS ────────────────────────────────────────────── */
+.sec-num{
+  font-size:130px;font-weight:800;
+  color:var(--blue);opacity:.06;
+  line-height:1;
+  position:absolute;
+  top:50%;left:1rem;
+  transform:translateY(-50%);
+  pointer-events:none;user-select:none;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ── TYPOGRAPHY ─────────────────────────────────────────────────── */
+.label{
+  font-size:12px;font-weight:600;
+  letter-spacing:.2em;color:var(--blue);
+  text-transform:uppercase;margin-bottom:.9rem;
+}
+
+.sec-title{
+  font-size:40px;font-weight:600;
+  color:var(--dark);line-height:1.2;
+  margin-bottom:1.4rem;
+  letter-spacing:-.015em;
+}
+
+.body-text{
+  font-size:16px;line-height:1.85;
+  color:rgba(14,18,23,.65);margin-bottom:1.25rem;
+}
+
+/* ── SPLIT ───────────────────────────────────────────────────────── */
+.split{display:flex;gap:4rem;align-items:center;width:100%}
+.split-l,.split-r{flex:1}
+
+/* ── STAT CARDS ─────────────────────────────────────────────────── */
+.stat-cards{display:flex;gap:1.25rem;margin-top:2rem;flex-wrap:wrap}
+
+.stat-card{
+  flex:1;min-width:130px;
+  border:1px solid var(--b30);border-radius:12px;
+  padding:1.4rem;background:#fff;
+  box-shadow:var(--glow);
+}
+
+.stat-n{font-size:30px;font-weight:700;color:var(--blue);display:block}
+.stat-l{font-size:12.5px;color:rgba(14,18,23,.55);margin-top:.25rem;line-height:1.5}
+
+/* ── REQUIREMENTS ───────────────────────────────────────────────── */
+.req-list{display:flex;flex-direction:column;gap:.65rem;margin-top:1.25rem}
+
+.req-row{
+  display:flex;align-items:center;gap:1rem;
+  padding:.9rem 1.25rem;
+  border-left:3px solid var(--blue);
+  background:rgba(38,120,151,.04);
+  border-radius:0 8px 8px 0;
+  opacity:0;transform:translateX(-18px);
+}
+
+.req-text{flex:1;font-size:14.5px;color:var(--dark);line-height:1.5}
+
+.req-tag{
+  font-size:10.5px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--blue);background:var(--b10);
+  border:1px solid var(--b20);border-radius:4px;
+  padding:.2em .65em;white-space:nowrap;
+}
+.req-row:has(.req-tag) .req-tag[data-p="must"],
+.req-tag.must{ color:#1B5E20;background:rgba(27,94,32,.08);border-color:rgba(27,94,32,.25) }
+.req-tag.should{ color:#E65100;background:rgba(230,81,0,.08);border-color:rgba(230,81,0,.25) }
+.req-tag.could{ color:#4A148C;background:rgba(74,20,140,.08);border-color:rgba(74,20,140,.25) }
+
+/* ── FEATURE PILLS ──────────────────────────────────────────────── */
+.pills{display:flex;gap:.65rem;flex-wrap:wrap;margin-top:1.5rem}
+
+.pill{
+  font-size:13.5px;font-weight:500;
+  color:var(--blue);background:var(--b10);
+  border:1px solid var(--b20);border-radius:100px;
+  padding:.45em 1.2em;
+  opacity:0;transform:scale(.85);
+}
+
+/* ── USER CARDS ─────────────────────────────────────────────────── */
+.user-cards{display:flex;gap:1.4rem;margin-top:2.5rem;flex-wrap:wrap}
+
+.user-card{
+  flex:1;min-width:200px;
+  border:1px solid var(--b30);border-radius:16px;
+  padding:2rem 1.5rem;background:#fff;
+  transition:box-shadow .3s var(--ease);
+  opacity:0;transform:translateY(20px);
+}
+
+.user-card:hover{box-shadow:0 0 32px rgba(38,120,151,.14)}
+
+.u-icon{
+  width:48px;height:48px;border-radius:12px;
+  background:var(--b10);border:1px solid var(--b20);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:1rem;
+}
+.u-icon svg{pointer-events:none;flex-shrink:0}
+
+.u-title{font-size:16.5px;font-weight:600;color:var(--dark);margin-bottom:.45rem}
+.u-desc{font-size:13.5px;line-height:1.75;color:rgba(14,18,23,.58)}
+
+/* ── ARCH DIAGRAM ───────────────────────────────────────────────── */
+.arch-wrap{
+  display:flex;align-items:center;
+  justify-content:center;
+  gap:0;flex-wrap:nowrap;
+  overflow-x:auto;
+  padding:2.5rem 0;margin-top:1rem;
+}
+
+.arch-node{
+  display:flex;flex-direction:column;
+  align-items:center;gap:.5rem;
+  opacity:0;transform:scale(.88);
+  transition:transform .3s;
+}
+
+.arch-box{
+  border:1px solid var(--blue);
+  border-radius:10px;padding:1rem 1.35rem;
+  background:#fff;min-width:110px;
+  text-align:center;box-shadow:var(--glow);
+}
+
+.arch-box-name{font-size:13px;font-weight:700;color:var(--dark)}
+.arch-box-sub{font-size:11px;color:var(--blue);margin-top:.2rem}
+
+.arch-arrow{
+  display:flex;flex-direction:column;
+  align-items:center;padding:0 .6rem;
+  opacity:0;
+}
+
+.arch-line{
+  width:44px;height:2px;
+  background:linear-gradient(to right,var(--blue),rgba(38,120,151,.4));
+  position:relative;
+}
+.arch-line::after{
+  content:'';position:absolute;right:-5px;top:-4px;
+  border:5px solid transparent;border-left-color:var(--blue);
+}
+
+.arch-proto{font-size:10px;color:var(--blue);margin-top:4px;letter-spacing:.06em}
+
+/* ── TECH GRID ───────────────────────────────────────────────────── */
+.tech-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  gap:1.2rem;margin-top:2rem;
+}
+
+.tech-card{
+  border:1px solid var(--b30);border-radius:12px;
+  padding:1.5rem;background:#fff;
+  box-shadow:var(--glow);
+  opacity:0;transform:translateY(18px);
+  transition:box-shadow .3s;
+}
+.tech-card:hover{box-shadow:0 0 28px rgba(38,120,151,.15)}
+
+.tech-dot{width:34px;height:34px;border-radius:8px;margin-bottom:.75rem}
+.tech-cat{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:.3rem}
+.tech-name{font-size:15px;font-weight:600;color:var(--dark);margin-bottom:.25rem}
+.tech-desc{font-size:12px;color:rgba(14,18,23,.52);line-height:1.65}
+
+/* ── EXPLODE SECTION ────────────────────────────────────────────── */
+#section-explode{background:transparent;pointer-events:none}
+
+.explode-hint{
+  position:absolute;bottom:3rem;left:50%;
+  transform:translateX(-50%);
+  font-size:12px;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(14,18,23,.35);
+}
+
+/* ── SECTION-SPECIFIC OVERRIDES ─────────────────────────────────── */
+/* Push requirements content to top-of-viewport */
+#section-requirements{align-items:flex-start!important;padding-top:7vh}
+#section-requirements .container{display:flex;align-items:flex-start}
+#section-requirements .split{align-items:flex-start}
+
+/* ── COMPONENTS ─────────────────────────────────────────────────── */
+#section-components{background:transparent;padding:0;align-items:stretch}
+
+.comp-layout{
+  display:flex;width:100%;height:100vh;
+  min-height:100vh;
+}
+
+.comp-3d-zone{
+  flex:1;position:relative;
+  background:transparent;
+  display:flex;align-items:center;justify-content:center;
+}
+
+.comp-3d-label{
+  position:absolute;bottom:2rem;left:50%;
+  transform:translateX(-50%);
+  font-size:10px;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(14,18,23,.3);
+}
+
+.comp-text-zone{
+  flex:1;background:#fff;
+  display:flex;flex-direction:column;
+  justify-content:center;
+  padding:3.5rem 3rem 3.5rem 2.5rem;
+  border-left:1px solid var(--b20);
+  position:relative;z-index:2;
+}
+
+.comp-num{
+  font-size:11px;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--blue);margin-bottom:.75rem;
+}
+
+.comp-title{
+  font-size:30px;font-weight:700;
+  color:var(--dark);margin-bottom:1rem;letter-spacing:-.01em;
+}
+
+.comp-desc{
+  font-size:14.5px;line-height:1.82;
+  color:rgba(14,18,23,.62);margin-bottom:1.5rem;
+}
+
+.spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+
+.spec-item{
+  background:rgba(38,120,151,.07);
+  border-radius:8px;padding:.75rem;
+}
+
+.spec-k{
+  font-size:10.5px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--blue);margin-bottom:.2rem;
+}
+
+.spec-v{font-size:13.5px;font-weight:500;color:var(--dark)}
+
+.comp-progress-bar{
+  position:absolute;bottom:2rem;left:0;right:0;
+  display:flex;align-items:center;justify-content:center;gap:.65rem;
+}
+
+.progress-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--b30);transition:background .4s,transform .4s;
+}
+.progress-dot.active{background:var(--blue);transform:scale(1.5)}
+
+/* ── PCB SECTION ────────────────────────────────────────────────── */
+#section-pcb .split-l{
+  min-height:320px;display:flex;
+  align-items:center;justify-content:center;
+}
+
+/* ── WEB APP ─────────────────────────────────────────────────────── */
+.browser-outer{
+  width:100%;max-width:740px;
+  margin:0 auto;
+}
+
+.browser-wrap{
+  background:#f0f2f5;border-radius:12px;overflow:hidden;
+  box-shadow:0 40px 80px rgba(0,0,0,.12),var(--glow);
+  transform:perspective(1200px) rotateX(12deg) rotateY(-4deg);
+  transform-style:preserve-3d;
+  transition:transform .7s var(--ease);
+}
+.browser-wrap:hover{
+  transform:perspective(1200px) rotateX(2deg) rotateY(0deg);
+}
+
+.br-chrome{
+  background:#e4e6ea;padding:.7rem 1rem;
+  display:flex;align-items:center;gap:.8rem;
+  border-bottom:1px solid rgba(0,0,0,.08);
+}
+
+.tls{display:flex;gap:5px}
+.tl{width:11px;height:11px;border-radius:50%}
+.tl-r{background:#ff5f57}
+.tl-y{background:#ffbd2e}
+.tl-g{background:#28ca41}
+
+.addr{
+  flex:1;background:#fff;border-radius:5px;
+  padding:.3rem .7rem;font-size:11px;
+  color:rgba(0,0,0,.35);font-family:monospace;
+}
+
+.br-screen{
+  height:360px;background:#f8f9fb;
+  display:flex;flex-direction:column;
+}
+
+.app-bar{
+  height:50px;background:var(--dark);
+  display:flex;align-items:center;padding:0 1.25rem;gap:.75rem;
+  flex-shrink:0;
+}
+
+.app-logo-t{font-size:13.5px;font-weight:700;color:var(--blue);letter-spacing:.06em}
+.app-nav-items{display:flex;gap:1.5rem;margin-left:2rem}
+.app-nav-i{font-size:11.5px;color:rgba(255,255,255,.4)}
+.app-nav-i.on{color:#fff}
+
+.app-body{
+  flex:1;display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:.8rem;padding:.8rem;
+}
+
+.app-card{
+  background:#fff;border-radius:7px;
+  padding:.9rem;border:1px solid rgba(0,0,0,.05);
+}
+
+.app-card-h{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(0,0,0,.35);margin-bottom:.35rem}
+.app-card-v{font-size:20px;font-weight:700;color:var(--blue)}
+.app-card-u{font-size:10px;color:rgba(0,0,0,.35);margin-top:.2rem}
+
+.app-chart{
+  background:#fff;border-radius:7px;
+  border:1px solid rgba(0,0,0,.05);
+  grid-column:span 3;height:70px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:rgba(0,0,0,.2);
+  gap:.5rem;
+}
+
+.webapp-feats{display:flex;gap:2rem;margin-top:2.5rem;flex-wrap:wrap}
+
+.webapp-feat{flex:1;min-width:180px;opacity:0;transform:translateY(18px)}
+.wf-icon{
+  width:40px;height:40px;border-radius:10px;
+  background:var(--b10);border:1px solid var(--b20);
+  display:flex;align-items:center;justify-content:center;
+  font-size:19px;margin-bottom:.75rem;
+}
+.wf-title{font-size:14.5px;font-weight:600;color:var(--dark);margin-bottom:.25rem}
+.wf-desc{font-size:12.5px;color:rgba(14,18,23,.52);line-height:1.65}
+
+/* ── PHONE MOCKUP ────────────────────────────────────────────────── */
+.phone-outer{
+  display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  opacity:0;transform:translateY(30px) scale(0.92);
+}
+
+.phone-frame{
+  width:240px;height:500px;border-radius:40px;
+  border:3px solid rgba(38,120,151,.35);
+  background:#0a0e12;
+  box-shadow:0 40px 80px rgba(0,0,0,.18),0 0 0 1px rgba(38,120,151,.12),
+    inset 0 0 0 2px rgba(255,255,255,.04);
+  overflow:hidden;position:relative;
+}
+
+.phone-notch{
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  width:70px;height:18px;background:#0a0e12;
+  border-radius:9px;z-index:10;
+}
+
+.phone-screen{width:100%;height:100%;position:relative;overflow:hidden;background:#0a0e12}
+
+.app-ss{
+  position:absolute;top:0;left:0;
+  width:100%;height:100%;
+  object-fit:cover;object-position:top;
+  opacity:0;
+}
+
+.phone-dots{display:flex;gap:.55rem;justify-content:center}
+
+.ph-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--b30);transition:background .35s,transform .35s;
+}
+.ph-dot.active{background:var(--blue);transform:scale(1.5)}
+
+/* ── APP SCREEN PANELS ───────────────────────────────────────────── */
+.app-sp{position:absolute;top:0;left:0;right:0;opacity:0}
+
+.app-sp-badge{
+  display:inline-block;
+  font-size:10.5px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--blue);background:var(--b10);border:1px solid var(--b20);
+  border-radius:100px;padding:.25em .9em;margin-bottom:.9rem;
+}
+
+.app-sp-title{
+  font-size:32px;font-weight:700;color:var(--dark);
+  line-height:1.15;letter-spacing:-.015em;margin-bottom:.85rem;
+}
+
+.app-sp-desc{
+  font-size:15.5px;line-height:1.85;
+  color:rgba(14,18,23,.62);max-width:380px;
+}
+
+/* ── VIDEO ───────────────────────────────────────────────────────── */
+.vid-outer{max-width:780px;margin:0 auto;width:100%}
+
+.vid-wrap{
+  background:#1c1c1e;border-radius:12px;overflow:hidden;
+  box-shadow:0 40px 80px rgba(0,0,0,.2),var(--glow);
+}
+
+.vid-chrome{
+  background:#2c2c2e;padding:.7rem 1rem;
+  display:flex;align-items:center;gap:.8rem;
+}
+
+.vid-title-bar{
+  flex:1;text-align:center;font-size:11px;
+  color:rgba(255,255,255,.25);font-family:monospace;
+}
+
+.vid-screen{
+  aspect-ratio:16/9;background:#000;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+
+.vid-screen video{width:100%;height:100%;object-fit:contain}
+
+.vid-placeholder{
+  display:flex;flex-direction:column;
+  align-items:center;gap:1rem;
+}
+
+.play-btn{
+  width:60px;height:60px;border-radius:50%;
+  background:rgba(38,120,151,.75);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.play-btn svg{pointer-events:none;margin-left:2px}
+
+.vid-ph-text{
+  font-size:12px;color:rgba(255,255,255,.25);
+  letter-spacing:.08em;text-align:center;padding:0 2rem;
+}
+
+/* ── TIMELINE ────────────────────────────────────────────────────── */
+.timeline-wrap{
+  position:relative;display:flex;
+  align-items:flex-start;margin-top:3rem;
+  overflow-x:auto;
+}
+
+.tl-track{
+  position:absolute;top:22px;left:0;right:0;
+  height:2px;background:var(--b20);
+}
+
+.tl-fill{
+  position:absolute;top:22px;left:0;
+  height:2px;background:var(--blue);width:0;
+  transition:width .3s;
+}
+
+.tl-item{
+  flex:1;min-width:170px;
+  padding:3.2rem 1.25rem 1rem;
+  position:relative;
+  opacity:0;transform:translateY(18px);
+}
+
+.tl-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--blue);position:absolute;
+  top:17px;left:1.25rem;
+  box-shadow:0 0 0 4px rgba(38,120,151,.15);
+}
+
+.tl-phase{
+  font-size:10.5px;font-weight:700;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--blue);margin-bottom:.5rem;
+}
+
+.tl-title{font-size:15.5px;font-weight:600;color:var(--dark);margin-bottom:.35rem}
+.tl-desc{font-size:12.5px;color:rgba(14,18,23,.52);line-height:1.65}
+
+/* ── TEAM ────────────────────────────────────────────────────────── */
+#section-team{
+  background:transparent;
+  flex-direction:column;text-align:center;
+  gap:0;
+}
+
+.team-inner{
+  position:relative;z-index:2;
+  text-align:center;width:100%;
+  padding:5rem 2rem 4rem;
+}
+
+.team-cards{
+  display:flex;gap:1.4rem;
+  justify-content:center;flex-wrap:wrap;
+  margin-top:2rem;
+}
+
+.team-card{
+  display:flex;flex-direction:column;
+  align-items:center;gap:.75rem;
+  padding:1.75rem 1.75rem 1.5rem;
+  border:1px solid var(--b30);border-radius:16px;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(10px);
+  min-width:155px;
+  opacity:0;transform:translateY(18px);
+}
+
+.t-avatar{
+  width:60px;height:60px;border-radius:50%;
+  background:var(--blue);display:flex;
+  align-items:center;justify-content:center;
+  font-size:20px;font-weight:700;color:#fff;
+}
+
+.t-name{font-size:14.5px;font-weight:600;color:var(--dark)}
+.t-role{font-size:11.5px;color:rgba(14,18,23,.45);letter-spacing:.04em}
+
+.thanks{
+  font-size:80px;font-weight:200;color:var(--dark);
+  letter-spacing:-.03em;line-height:1;
+  margin-top:3rem;opacity:0;
+}
+
+.final-cap{
+  font-size:12px;color:rgba(14,18,23,.3);
+  letter-spacing:.18em;text-transform:uppercase;
+  margin-top:.9rem;opacity:0;
+}
+
+/* ── DOT GRID ACCENT ────────────────────────────────────────────── */
+.dot-bg{
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(38,120,151,.12) 1px,transparent 1px);
+  background-size:30px 30px;
+  pointer-events:none;z-index:0;opacity:0;
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────────── */
+
+/* Tablet — 1024px */
+@media(max-width:1024px){
+  .hero-title{font-size:62px}
+  .sec-title{font-size:34px}
+  .split{gap:3rem}
+  .tech-grid{grid-template-columns:repeat(2,1fr)}
+  .comp-title{font-size:26px}
+}
+
+/* Mobile — 768px */
+@media(max-width:768px){
+  /* Base */
+  .container{padding:0 1.4rem}
+  .section{min-height:100svh}
+  .nav-logo{left:1rem;font-size:11px}
+  .sec-num{font-size:60px;opacity:.04}
+
+  /* Hero */
+  .hero-title{font-size:42px;letter-spacing:-.02em}
+  .hero-inner{top:18%}
+  .hero-subtitle{font-size:11px;letter-spacing:.18em}
+  .hero-date{font-size:11px}
+  .scroll-hint{font-size:11px}
+
+  /* Typography */
+  .sec-title{font-size:23px;margin-bottom:1rem;letter-spacing:-.01em}
+  .label{font-size:11px;margin-bottom:.6rem}
+  .body-text{font-size:14px;line-height:1.72;margin-bottom:.85rem}
+
+  /* Split — stack vertically, 3D acts as background on mobile */
+  .split{flex-direction:column;gap:1.25rem}
+  .split-l,.split-r{width:100%}
+
+  /* Stats */
+  .stat-cards{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:1.25rem}
+  .stat-card{padding:1rem .9rem}
+  .stat-n{font-size:22px}
+  .stat-l{font-size:11.5px}
+
+  /* Requirements */
+  #section-requirements{padding-top:4vh}
+  #section-requirements .container{display:block}
+  #section-requirements .split{flex-direction:column;gap:.75rem}
+  #section-requirements .body-text{display:none}
+  .req-list{gap:.38rem;margin-top:.75rem}
+  .req-row{padding:.55rem .9rem;gap:.65rem}
+  .req-text{font-size:12.5px;line-height:1.4}
+  .req-tag{font-size:9.5px;padding:.15em .5em}
+
+  /* Pills */
+  .pills{gap:.45rem;margin-top:1rem}
+  .pill{font-size:12px;padding:.38em .9em}
+
+  /* Users */
+  .user-cards{flex-direction:column;gap:.85rem;margin-top:1.5rem}
+  .user-card{padding:1.4rem 1.2rem}
+  .u-title{font-size:15px}
+  .u-desc{font-size:13px;line-height:1.65}
+
+  /* Architecture */
+  .arch-wrap{flex-direction:column;gap:1rem;padding:1.25rem 0;margin-top:.5rem}
+  .arch-arrow{transform:rotate(90deg)}
+  .arch-line{width:28px}
+  .arch-box{padding:.65rem .9rem;min-width:85px}
+  .arch-box-name{font-size:12px}
+  .arch-box-sub{font-size:10px}
+  .arch-proto{font-size:9px}
+
+  /* Tech grid */
+  .tech-grid{grid-template-columns:1fr 1fr;gap:.65rem;margin-top:1.25rem}
+  .tech-card{padding:1rem}
+  .tech-dot{width:28px;height:28px;margin-bottom:.55rem}
+  .tech-cat{font-size:9.5px}
+  .tech-name{font-size:13px}
+  .tech-desc{font-size:11px;line-height:1.55}
+
+  /* Components */
+  .comp-layout{flex-direction:column}
+  .comp-3d-zone{height:38vh;flex:none;width:100%}
+  .comp-text-zone{
+    border-left:none;border-top:1px solid var(--b20);
+    padding:1.4rem 1.2rem;overflow-y:auto;
+  }
+  .comp-title{font-size:21px;margin-bottom:.75rem}
+  .comp-desc{font-size:13px;line-height:1.68;margin-bottom:1rem}
+  .spec-grid{gap:.4rem}
+  .spec-item{padding:.6rem}
+  .spec-k{font-size:9.5px}
+  .spec-v{font-size:12.5px}
+
+  /* Phone mockup */
+  .phone-frame{width:185px;height:385px;border-radius:34px;border-width:2px}
+  .phone-notch{width:55px;height:14px}
+  #section-webapp .split{flex-direction:column;align-items:center;gap:1.5rem}
+  #section-webapp .split-l{flex:none}
+  .app-sp-badge{font-size:9.5px}
+  .app-sp-title{font-size:24px}
+  .app-sp-desc{font-size:14px;line-height:1.75}
+
+  /* PCB — 3D zone on top, text below on mobile */
+  #section-pcb .split{flex-direction:column;gap:.75rem}
+  #section-pcb .split-l{min-height:52vh;flex:none}
+
+  /* Timeline */
+  .timeline-wrap{flex-direction:column;gap:0;margin-top:1.5rem}
+  .tl-track,.tl-fill{display:none}
+  .tl-item{padding:.8rem 1rem .8rem 2rem;min-width:auto;width:100%}
+  .tl-phase{font-size:9.5px}
+  .tl-title{font-size:14px}
+  .tl-desc{font-size:12px;line-height:1.55}
+
+  /* Team */
+  .team-inner{padding:3rem 1.5rem 2.5rem}
+  .team-cards{gap:.85rem;margin-top:1.5rem}
+  .team-card{padding:1.25rem 1.1rem 1rem;min-width:120px}
+  .t-avatar{width:46px;height:46px;font-size:15px}
+  .t-name{font-size:12.5px}
+  .t-role{font-size:10.5px}
+  .thanks{font-size:40px;margin-top:2rem}
+  .final-cap{font-size:11px}
+
+  /* Video */
+  .vid-outer{max-width:100%}
+  .play-btn{width:48px;height:48px}
+}
+
+/* Mobile 3D layout fixes */
+@media(max-width:768px){
+  /* Reverse stack so empty 3D side is on top, text below */
+  #section-problem .split,
+  #section-solution .split { flex-direction:column-reverse }
+  #section-problem .split-r,
+  #section-solution .split-r { min-height:36vh;flex:none }
+  /* Reduce gap so content fits in 100svh */
+  #section-problem .split,
+  #section-solution .split { gap:.75rem }
+}
+
+/* Small mobile — 480px */
+@media(max-width:480px){
+  .hero-title{font-size:32px}
+  .hero-inner{top:16%}
+  .sec-title{font-size:20px}
+  .sec-num{display:none}
+  .stat-cards{grid-template-columns:1fr}
+  .tech-grid{grid-template-columns:1fr}
+  .phone-frame{width:155px;height:325px;border-radius:28px}
+  .app-sp-title{font-size:20px}
+  .app-sp-desc{font-size:13px}
+  .team-cards{flex-direction:column;align-items:center}
+  .comp-3d-zone{height:33vh}
+  #section-pcb .split{flex-direction:column}
+  #section-pcb .split-l{min-height:160px}
+  .thanks{font-size:32px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="nav-logo" id="nav-logo">ThermoGo</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  1. HERO                                                       -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-hero" class="section">
+  <div class="hero-inner" id="hero-inner">
+    <h1 class="hero-title">ThermoGo</h1>
+    <p class="hero-subtitle">Medicines Monitoring System</p>
+    <p class="hero-date">2025–2026 · ISS 396 Junior Project · MedTech SMU, Tunis</p>
+  </div>
+  <p class="scroll-hint" id="scroll-hint">Scroll to explore ↓</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  2. PROBLEM STATEMENT                                          -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-problem" class="section">
+  <div class="sec-num">01</div>
+  <div class="container">
+    <div class="split">
+      <div class="split-l">
+        <p class="label">The Challenge</p>
+        <h2 class="sec-title">Problem Statement</h2>
+        <p class="body-text">
+          Temperature-sensitive medications — insulin, vaccines, biologics — require strict
+          cold-chain management throughout their entire lifecycle. A single temperature excursion
+          can silently degrade a drug's efficacy, putting patients at serious risk without any
+          visible warning sign.
+        </p>
+        <p class="body-text">
+          According to the WHO, nearly 50% of vaccines are wasted globally each year due to
+          temperature failures. Insulin, which must be stored between 2°C and 8°C, becomes
+          ineffective when exposed to heat — yet most patients have no way to verify their
+          storage conditions at home.
+        </p>
+        <p class="body-text">
+          There is a clear need for an affordable, connected monitoring device that gives
+          patients and caregivers real-time visibility into medication storage conditions,
+          before damage occurs.
+        </p>
+        <div class="stat-cards">
+          <div class="stat-card">
+            <span class="stat-n">~50%</span>
+            <span class="stat-l">of vaccines wasted globally due to temperature failures (WHO)</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-n">2–8°C</span>
+            <span class="stat-l">insulin storage range — excursions render it ineffective</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-n">Zero</span>
+            <span class="stat-l">affordable home solutions for real-time medication monitoring</span>
+          </div>
+        </div>
+      </div>
+      <div class="split-r" id="problem-3d-zone" style="min-height:300px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  3. PROJECT REQUIREMENTS                                       -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-requirements" class="section">
+  <div class="sec-num">02</div>
+  <div class="container">
+    <div class="split">
+      <div class="split-l">
+        <p class="label">Scope & Constraints</p>
+        <h2 class="sec-title">Project Requirements</h2>
+        <p class="body-text">Defined through stakeholder analysis and MoSCoW prioritisation. Non-functional targets: battery &gt;180 days, response &lt;5 s, reliability &gt;99%, deep-sleep power &lt;100 µA.</p>
+      </div>
+      <div class="split-r">
+        <div class="req-list" id="req-list">
+          <div class="req-row"><span class="req-text">F1 — Temperature measurement via BME280 sensor</span><span class="req-tag must">Must</span></div>
+          <div class="req-row"><span class="req-text">F2 — Humidity measurement via BME280 sensor</span><span class="req-tag must">Must</span></div>
+          <div class="req-row"><span class="req-text">F3 — Battery level monitoring and low-battery alerts</span><span class="req-tag must">Must</span></div>
+          <div class="req-row"><span class="req-text">F4 — Cloud synchronisation of readings to Supabase</span><span class="req-tag must">Must</span></div>
+          <div class="req-row"><span class="req-text">F5 — User authentication (sign up / sign in)</span><span class="req-tag must">Must</span></div>
+          <div class="req-row"><span class="req-text">F6 — Real-time display of sensor data on OLED</span><span class="req-tag must">Must</span></div>
+          <div class="req-row"><span class="req-text">F7 — Configurable threshold alerts via mobile app</span><span class="req-tag should">Should</span></div>
+          <div class="req-row"><span class="req-text">F8 — Historical charts and trend visualisation</span><span class="req-tag should">Should</span></div>
+          <div class="req-row"><span class="req-text">F9 — Device registration and hotspot Wi-Fi setup</span><span class="req-tag should">Should</span></div>
+          <div class="req-row"><span class="req-text">F10 — AI-powered insights via Gemini API</span><span class="req-tag could">Could</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  4. PROPOSED SOLUTION                                          -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-solution" class="section">
+  <div class="sec-num">03</div>
+  <div class="container">
+    <div class="split">
+      <div class="split-l">
+        <p class="label">Our Approach</p>
+        <h2 class="sec-title">Proposed Solution</h2>
+        <p class="body-text">
+          ThermoGo is an IoT ecosystem built around three principles — <strong>Simplicity</strong>,
+          <strong>Configurability</strong>, and <strong>Accessibility</strong>. It consists of three
+          integrated components: the ThermoGo Device, the ThermoGo Mobile App, and the ThermoGo Cloud.
+        </p>
+        <p class="body-text">
+          The ESP32-WROOM-32 device continuously samples temperature and humidity via the BME280 sensor,
+          buffering up to 10 readings locally before syncing to Supabase over Wi-Fi. An adaptive sleep
+          algorithm keeps deep-sleep current below 100 µA, targeting a battery life exceeding 180 days.
+        </p>
+        <div class="pills" id="feature-pills">
+          <span class="pill">Simplicity</span>
+          <span class="pill">Configurability</span>
+          <span class="pill">Accessibility</span>
+          <span class="pill">Cloud buffering</span>
+          <span class="pill">&gt;180-day battery</span>
+          <span class="pill">AI insights</span>
+        </div>
+      </div>
+      <div class="split-r" id="solution-3d-zone" style="min-height:300px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  5. TARGET USERS                                               -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-users" class="section">
+  <div class="sec-num">04</div>
+  <div class="container" style="text-align:center">
+    <p class="label">Designed For</p>
+    <h2 class="sec-title">Who It's For</h2>
+    <div class="user-cards" id="user-cards">
+      <div class="user-card">
+        <div class="u-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+        <div class="u-title">Elderly Patients</div>
+        <p class="u-desc">Patients managing temperature-sensitive medications at home — insulin, biologics, eye drops — who need immediate alerts if their storage conditions become unsafe.</p>
+      </div>
+      <div class="user-card">
+        <div class="u-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.3 3-6 7-6s7 2.7 7 6"/><circle cx="17" cy="8" r="2.5"/><path d="M22 20c0-2.2-1.3-4.1-3.1-5"/></svg>
+        </div>
+        <div class="u-title">Caregivers & Family</div>
+        <p class="u-desc">Family members and home-care providers who need remote visibility into medication storage conditions and instant notifications when thresholds are exceeded.</p>
+      </div>
+      <div class="user-card">
+        <div class="u-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/><path d="M8 3a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2Z"/><path d="M12 11v6"/><path d="M9 14h6"/></svg>
+        </div>
+        <div class="u-title">Medical Professionals</div>
+        <p class="u-desc">Pharmacists and clinicians who need verified storage logs to confirm that a patient's medication remained within safe temperature ranges throughout its use.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  6. SYSTEM ARCHITECTURE                                        -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-arch" class="section">
+  <div class="sec-num">05</div>
+  <div class="container">
+    <p class="label">Infrastructure</p>
+    <h2 class="sec-title" style="text-align:center">System Architecture</h2>
+    <div class="arch-wrap" id="arch-wrap">
+      <div class="arch-node" id="an0">
+        <div class="arch-box">
+          <div class="arch-box-name">ThermoGo Device</div>
+          <div class="arch-box-sub">ESP32-WROOM-32</div>
+        </div>
+      </div>
+      <div class="arch-arrow" id="aa0">
+        <div class="arch-line"></div>
+        <div class="arch-proto">Wi-Fi (HTTPS)</div>
+      </div>
+      <div class="arch-node" id="an1">
+        <div class="arch-box">
+          <div class="arch-box-name">Supabase</div>
+          <div class="arch-box-sub">PostgreSQL + Auth + Realtime</div>
+        </div>
+      </div>
+      <div class="arch-arrow" id="aa1">
+        <div class="arch-line"></div>
+        <div class="arch-proto">HTTPS / Realtime WS</div>
+      </div>
+      <div class="arch-node" id="an2">
+        <div class="arch-box">
+          <div class="arch-box-name">Mobile App</div>
+          <div class="arch-box-sub">React Native · Expo SDK 50</div>
+        </div>
+      </div>
+      <div class="arch-arrow" id="aa2">
+        <div class="arch-line"></div>
+        <div class="arch-proto">Gemini API</div>
+      </div>
+      <div class="arch-node" id="an3">
+        <div class="arch-box">
+          <div class="arch-box-name">AI Insights</div>
+          <div class="arch-box-sub">Google Gemini</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  7. SOFTWARE STACK                                             -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-tech" class="section">
+  <div class="sec-num">06</div>
+  <div class="container">
+    <p class="label">Technologies Used</p>
+    <h2 class="sec-title">Software & Technology Stack</h2>
+    <div class="tech-grid" id="tech-grid">
+      <div class="tech-card">
+        <div class="tech-dot" style="background:#E53935"></div>
+        <div class="tech-cat">Firmware</div>
+        <div class="tech-name">Arduino + PlatformIO</div>
+        <div class="tech-desc">Arduino framework on PlatformIO — rapid sensor integration, OTA updates, and serial debugging</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-dot" style="background:#00897B"></div>
+        <div class="tech-cat">Firmware</div>
+        <div class="tech-name">FreeRTOS</div>
+        <div class="tech-desc">Real-time OS powering concurrent sensor reads, Wi-Fi connectivity, and adaptive sleep management</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-dot" style="background:#0288D1"></div>
+        <div class="tech-cat">Sensor</div>
+        <div class="tech-name">Bosch BME280</div>
+        <div class="tech-desc">I²C sensor (addr 0x76) — simultaneous temperature, humidity, and barometric pressure readings</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-dot" style="background:#7B1FA2"></div>
+        <div class="tech-cat">Sensor</div>
+        <div class="tech-name">ADXL345</div>
+        <div class="tech-desc">3-axis MEMS accelerometer for motion detection, orientation sensing, and tampering alerts</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-dot" style="background:#1B5E20"></div>
+        <div class="tech-cat">Backend</div>
+        <div class="tech-name">Supabase</div>
+        <div class="tech-desc">PostgreSQL + Auth + Realtime subscriptions — cloud sync, user management, and live data streaming</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-dot" style="background:#267897"></div>
+        <div class="tech-cat">Mobile</div>
+        <div class="tech-name">React Native · Expo SDK 50</div>
+        <div class="tech-desc">Cross-platform iOS & Android app — real-time charts, threshold alerts, AI insights, device setup</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-dot" style="background:#F57C00"></div>
+        <div class="tech-cat">Mechanical</div>
+        <div class="tech-name">SolidWorks 2023</div>
+        <div class="tech-desc">3D enclosure design and FDM-printed housing for the ThermoGo device prototype</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-dot" style="background:#C62828"></div>
+        <div class="tech-cat">Hardware</div>
+        <div class="tech-name">Altium Designer</div>
+        <div class="tech-desc">Professional PCB schematic capture and 2-layer board layout with DRC validation</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  8. DEVICE EXPLODE                                             -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-explode" class="section">
+  <div class="explode-hint" id="explode-hint">Exploring the hardware →</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  9. COMPONENTS                                                 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-components" class="section">
+  <div class="comp-layout">
+    <!-- LEFT: 3D renders through the canvas -->
+    <div class="comp-3d-zone">
+      <div class="comp-3d-label" id="comp-3d-label">3D MODEL</div>
+    </div>
+
+    <!-- RIGHT: Text content -->
+    <div class="comp-text-zone">
+
+      <!-- Component 0: ESP32 -->
+      <div class="comp-panel" id="cpanel-0">
+        <div class="comp-num" id="comp-counter">Component 1 of 6</div>
+        <div class="comp-title">ESP32-WROOM-32</div>
+        <p class="comp-desc">The brain of ThermoGo. The ESP32-WROOM-32 handles all sensor data acquisition, wireless communication (Wi-Fi + BLE), and power management. Its dual-core Xtensa LX6 architecture runs FreeRTOS tasks concurrently, with an adaptive sleep algorithm that keeps idle current below 100 µA.</p>
+        <div class="spec-grid">
+          <div class="spec-item"><div class="spec-k">Clock Speed</div><div class="spec-v">240 MHz</div></div>
+          <div class="spec-item"><div class="spec-k">CPU Cores</div><div class="spec-v">Dual Xtensa LX6</div></div>
+          <div class="spec-item"><div class="spec-k">Flash</div><div class="spec-v">4 MB</div></div>
+          <div class="spec-item"><div class="spec-k">Wireless</div><div class="spec-v">Wi-Fi 802.11 b/g/n + BLE</div></div>
+        </div>
+      </div>
+
+      <!-- Component 1: Display -->
+      <div class="comp-panel" id="cpanel-1" style="display:none">
+        <div class="comp-num">Component 2 of 6</div>
+        <div class="comp-title">SH1106 OLED Display</div>
+        <p class="comp-desc">A 1.3" monochrome OLED (SH1106 driver) provides at-a-glance status: live temperature, humidity, battery level, Wi-Fi connection state, and threshold alert indicators. High contrast and wide viewing angle ensure readability in any ambient light.</p>
+        <div class="spec-grid">
+          <div class="spec-item"><div class="spec-k">Resolution</div><div class="spec-v">128 × 64 px</div></div>
+          <div class="spec-item"><div class="spec-k">Interface</div><div class="spec-v">I²C</div></div>
+          <div class="spec-item"><div class="spec-k">Diagonal</div><div class="spec-v">1.3 inch</div></div>
+          <div class="spec-item"><div class="spec-k">Driver</div><div class="spec-v">SH1106</div></div>
+        </div>
+      </div>
+
+      <!-- Component 2: BME Environmental Sensor -->
+      <div class="comp-panel" id="cpanel-2" style="display:none">
+        <div class="comp-num">Component 3 of 6</div>
+        <div class="comp-title">Bosch BME280</div>
+        <p class="comp-desc">The primary sensing element of ThermoGo. A Bosch MEMS chip that simultaneously measures temperature, relative humidity, and barometric pressure. Addressed via I²C at 0x76 — it continuously audits medication storage conditions and triggers configurable threshold alerts.</p>
+        <div class="spec-grid">
+          <div class="spec-item"><div class="spec-k">Temp Range</div><div class="spec-v">−40 to 85 °C</div></div>
+          <div class="spec-item"><div class="spec-k">Humidity</div><div class="spec-v">0 – 100 % RH</div></div>
+          <div class="spec-item"><div class="spec-k">Pressure</div><div class="spec-v">300 – 1100 hPa</div></div>
+          <div class="spec-item"><div class="spec-k">I²C Address</div><div class="spec-v">0x76</div></div>
+        </div>
+      </div>
+
+      <!-- Component 3: TP4056 Charger -->
+      <div class="comp-panel" id="cpanel-3" style="display:none">
+        <div class="comp-num">Component 4 of 6</div>
+        <div class="comp-title">TP4056 Li-Ion Charger</div>
+        <p class="comp-desc">A dedicated single-cell lithium battery charge controller implementing a constant-current / constant-voltage profile. Integrates thermal feedback to prevent overheating, plus full protection against overcharge, over-discharge, and short circuits — keeping the battery safe over thousands of cycles.</p>
+        <div class="spec-grid">
+          <div class="spec-item"><div class="spec-k">Input Voltage</div><div class="spec-v">4.5 – 5.5 V</div></div>
+          <div class="spec-item"><div class="spec-k">Charge Current</div><div class="spec-v">Up to 1 A</div></div>
+          <div class="spec-item"><div class="spec-k">Topology</div><div class="spec-v">CC / CV</div></div>
+          <div class="spec-item"><div class="spec-k">Protection</div><div class="spec-v">OVP / OCP / SCP</div></div>
+        </div>
+      </div>
+
+      <!-- Component 4: ADXL345 Accelerometer -->
+      <div class="comp-panel" id="cpanel-4" style="display:none">
+        <div class="comp-num">Component 5 of 6</div>
+        <div class="comp-title">ADXL345 Accelerometer</div>
+        <p class="comp-desc">A 3-axis MEMS digital accelerometer for motion and orientation detection. ThermoGo uses it to detect device movement and displacement events — providing an additional layer of environmental logging alongside temperature and humidity data.</p>
+        <div class="spec-grid">
+          <div class="spec-item"><div class="spec-k">Resolution</div><div class="spec-v">13-bit</div></div>
+          <div class="spec-item"><div class="spec-k">Range</div><div class="spec-v">± 2 / 4 / 8 / 16 g</div></div>
+          <div class="spec-item"><div class="spec-k">Interface</div><div class="spec-v">I²C / SPI</div></div>
+          <div class="spec-item"><div class="spec-k">Current</div><div class="spec-v">~23 µA</div></div>
+        </div>
+      </div>
+
+      <!-- Component 5: MT3608 Boost Converter -->
+      <div class="comp-panel" id="cpanel-5" style="display:none">
+        <div class="comp-num">Component 6 of 6</div>
+        <div class="comp-title">MT3608 Boost Converter</div>
+        <p class="comp-desc">A compact step-up DC-DC converter that raises the LiPo cell output (3.0 – 4.2 V) to a stable 5 V rail powering the OLED display and USB peripherals. Switching at 1.2 MHz keeps the inductor small while achieving up to 93 % efficiency — minimising heat and battery drain.</p>
+        <div class="spec-grid">
+          <div class="spec-item"><div class="spec-k">Input</div><div class="spec-v">2 – 24 V</div></div>
+          <div class="spec-item"><div class="spec-k">Output</div><div class="spec-v">Up to 28 V</div></div>
+          <div class="spec-item"><div class="spec-k">Efficiency</div><div class="spec-v">Up to 93 %</div></div>
+          <div class="spec-item"><div class="spec-k">Frequency</div><div class="spec-v">1.2 MHz</div></div>
+        </div>
+      </div>
+
+      <!-- Progress dots -->
+      <div class="comp-progress-bar" id="comp-progress-bar">
+        <div class="progress-dot active" id="pd0"></div>
+        <div class="progress-dot" id="pd1"></div>
+        <div class="progress-dot" id="pd2"></div>
+        <div class="progress-dot" id="pd3"></div>
+        <div class="progress-dot" id="pd4"></div>
+        <div class="progress-dot" id="pd5"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  10. PCB OVERVIEW                                              -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-pcb" class="section">
+  <div class="sec-num" style="opacity:.04">PCB</div>
+  <div class="container">
+    <div class="split">
+      <div class="split-l" id="pcb-3d-zone" style="min-height:320px"></div>
+      <div class="split-r">
+        <p class="label">Hardware Design</p>
+        <h2 class="sec-title">The Circuit Board</h2>
+        <p class="body-text">
+          The ThermoGo PCB is a custom 2-layer board designed in Altium Designer, optimised
+          for compact form factor, signal integrity, and minimal power draw. All critical
+          components — ESP32-WROOM-32, BME280, ADXL345, TP4056 charger, and MT3608 boost
+          converter — are placed on the top layer with clear domain separation.
+        </p>
+        <p class="body-text">
+          The board features a dedicated ground plane, decoupling capacitors on every power
+          rail, and careful RF keepout zone routing around the ESP32 antenna. Total BOM cost
+          for the prototype is 70.80 TND.
+        </p>
+        <div class="pills" style="margin-top:1rem">
+          <span class="pill" style="opacity:1;transform:none">2-Layer Board</span>
+          <span class="pill" style="opacity:1;transform:none">Altium Designer</span>
+          <span class="pill" style="opacity:1;transform:none">Micro-USB Charging</span>
+          <span class="pill" style="opacity:1;transform:none">Ground Plane</span>
+          <span class="pill" style="opacity:1;transform:none">DRC Validated</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  11. APP SHOWCASE                                              -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-webapp" class="section">
+  <div class="container">
+    <div class="split" style="align-items:center;gap:5rem">
+
+      <!-- LEFT: Phone mockup -->
+      <div class="split-l" style="display:flex;justify-content:center;flex:0 0 auto">
+        <div class="phone-outer" id="phone-outer">
+          <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <img class="app-ss" id="app-ss-0" src="app_login_placeholder.jpg"      alt="Login">
+              <img class="app-ss" id="app-ss-1" src="app_status_placeholder.jpg"     alt="Dashboard">
+              <img class="app-ss" id="app-ss-2" src="app_chart_placeholder.jpg"      alt="Charts">
+              <img class="app-ss" id="app-ss-3" src="app_alerts_placeholder.jpg"     alt="Alerts">
+              <img class="app-ss" id="app-ss-4" src="app_add_device_placeholder.jpg" alt="Add Device">
+              <img class="app-ss" id="app-ss-5" src="app_profile_placeholder.jpg"    alt="Profile">
+            </div>
+          </div>
+          <div class="phone-dots">
+            <div class="ph-dot" id="phd0"></div>
+            <div class="ph-dot" id="phd1"></div>
+            <div class="ph-dot" id="phd2"></div>
+            <div class="ph-dot" id="phd3"></div>
+            <div class="ph-dot" id="phd4"></div>
+            <div class="ph-dot" id="phd5"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Per-screen descriptions -->
+      <div class="split-r" style="position:relative;min-height:260px">
+        <p class="label">React Native · Expo SDK 50</p>
+        <h2 class="sec-title" style="margin-bottom:2rem">The ThermoGo App</h2>
+
+        <div style="position:relative;min-height:180px">
+          <div class="app-sp" id="app-sp-0">
+            <div class="app-sp-badge">01 / 06</div>
+            <div class="app-sp-title">Secure Sign-In</div>
+            <p class="app-sp-desc">Supabase Auth-powered login with email &amp; password. New users register directly from the app — accounts are linked to their ThermoGo devices.</p>
+          </div>
+          <div class="app-sp" id="app-sp-1">
+            <div class="app-sp-badge">02 / 06</div>
+            <div class="app-sp-title">Live Dashboard</div>
+            <p class="app-sp-desc">Real-time temperature, humidity, and battery level streamed from your device via Supabase Realtime — refreshed automatically as new readings arrive.</p>
+          </div>
+          <div class="app-sp" id="app-sp-2">
+            <div class="app-sp-badge">03 / 06</div>
+            <div class="app-sp-title">Historical Charts</div>
+            <p class="app-sp-desc">Interactive trend charts showing temperature and humidity over time. Spot excursions and verify your medication stayed within safe storage bounds.</p>
+          </div>
+          <div class="app-sp" id="app-sp-3">
+            <div class="app-sp-badge">04 / 06</div>
+            <div class="app-sp-title">Threshold Alerts</div>
+            <p class="app-sp-desc">Configurable push notifications trigger the moment temperature or humidity crosses a user-set boundary — so you know before any damage occurs.</p>
+          </div>
+          <div class="app-sp" id="app-sp-4">
+            <div class="app-sp-badge">05 / 06</div>
+            <div class="app-sp-title">Device Setup</div>
+            <p class="app-sp-desc">Hotspot-based Wi-Fi provisioning — the app connects to the device's access point, sends network credentials, and ThermoGo is live within seconds.</p>
+          </div>
+          <div class="app-sp" id="app-sp-5">
+            <div class="app-sp-badge">06 / 06</div>
+            <div class="app-sp-title">Profile &amp; AI Insights</div>
+            <p class="app-sp-desc">Manage your account and view AI-generated recommendations powered by the Gemini API — personalised analysis of your medication storage history.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  12. DEMO VIDEO                                                -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-video" class="section" style="background:rgba(248,249,251,.9)">
+  <div class="container">
+    <p class="label" style="text-align:center">In Action</p>
+    <h2 class="sec-title" style="text-align:center;margin-bottom:2rem">See It In Action</h2>
+    <div class="vid-outer" id="vid-outer" style="opacity:0;transform:scale(.92)">
+      <div class="vid-wrap">
+        <div class="vid-chrome">
+          <div class="tls">
+            <div class="tl tl-r"></div>
+            <div class="tl tl-y"></div>
+            <div class="tl tl-g"></div>
+          </div>
+          <div class="vid-title-bar">ThermoGo — Full System Walkthrough Demo</div>
+        </div>
+        <div class="vid-screen">
+          <video controls src="demo.mp4" id="demo-video" style="display:none"></video>
+          <div class="vid-placeholder" id="vid-placeholder">
+            <div class="play-btn"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="white"><polygon points="6,3 20,12 6,21"/></svg></div>
+            <div class="vid-ph-text">Drop <strong>demo.mp4</strong> in this folder to enable playback</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  13. NEXT STEPS                                                -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-next" class="section">
+  <div class="sec-num">07</div>
+  <div class="container">
+    <p class="label">Roadmap</p>
+    <h2 class="sec-title">What's Next</h2>
+    <p class="body-text" style="max-width:460px">ThermoGo is a functional prototype. These are the steps toward a production-ready connected health product.</p>
+    <div class="timeline-wrap" id="timeline-wrap">
+      <div class="tl-track"></div>
+      <div class="tl-fill" id="tl-fill"></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-phase">Next</div><div class="tl-title">OTA Firmware Updates</div><p class="tl-desc">Implement over-the-air update capability so deployed devices can receive patches and new features wirelessly</p></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-phase">Near-term</div><div class="tl-title">Multi-Device Support</div><p class="tl-desc">Extend the app to manage multiple ThermoGo devices per account — for households with several medications</p></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-phase">Mid-term</div><div class="tl-title">Industrial Enclosure</div><p class="tl-desc">Transition from FDM prototype to injection-moulded housing, IP-rated for real-world storage environments</p></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-phase">Long-term</div><div class="tl-title">Clinical Deployment</div><p class="tl-desc">Partner with pharmacies and home care networks to deploy ThermoGo at scale across North Africa</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--  14. TEAM & THANK YOU                                          -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="section-team" class="section">
+  <div class="team-inner">
+    <p class="label">Behind the Project</p>
+    <h2 class="sec-title">The Team</h2>
+    <div class="team-cards" id="team-cards">
+      <div class="team-card"><div class="t-avatar">MB</div><div class="t-name">Mohamed Amine BACHA</div><div class="t-role">Engineering</div></div>
+      <div class="team-card"><div class="t-avatar">MM</div><div class="t-name">Malek MTIMET</div><div class="t-role">Engineering</div></div>
+      <div class="team-card"><div class="t-avatar">KA</div><div class="t-name">Kais ABAAB</div><div class="t-role">Engineering</div></div>
+      <div class="team-card"><div class="t-avatar">ST</div><div class="t-name">Syrine TRABELSI</div><div class="t-role">Engineering</div></div>
+      <div class="team-card"><div class="t-avatar">YJ</div><div class="t-name">Youssef El Islem JAOUADI</div><div class="t-role">Engineering</div></div>
+    </div>
+    <p style="font-size:13px;color:rgba(14,18,23,.4);margin-top:1.75rem;letter-spacing:.04em">Supervised by <strong style="color:rgba(14,18,23,.65)">Miss. Nourhen Akrouti</strong></p>
+    <div class="thanks" id="thanks">Thank You</div>
+    <div class="final-cap" id="final-cap">ThermoGo — 2025–2026 · ISS396 Junior Project · MedTech SMU</div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  THREE.JS + GSAP SCRIPT                                       -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+gsap.registerPlugin(ScrollTrigger);
+
+// ── Video fallback ───────────────────────────────────────────────
+const demoVid = document.getElementById('demo-video');
+const vidPH   = document.getElementById('vid-placeholder');
+if (demoVid) {
+  fetch('demo.mp4',{method:'HEAD'})
+    .then(r => { if(r.ok){ demoVid.style.display='block'; vidPH.style.display='none'; } })
+    .catch(()=>{});
+  demoVid.addEventListener('error', () => { demoVid.style.display='none'; vidPH.style.display='flex'; });
+}
+
+// ── Renderer ──────────────────────────────────────────────────────
+const canvas = document.getElementById('bg-canvas');
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(W(), H());
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0xFFFFFF, 1);
+
+// ── Scene ─────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xFFFFFF);
+scene.fog = new THREE.Fog(0xFFFFFF, 18, 55);
+
+// ── Camera ────────────────────────────────────────────────────────
+const camera = new THREE.PerspectiveCamera(48, W()/H(), 0.1, 100);
+camera.position.set(0, 0.6, 5.5);
+
+// Animated look-at target — GSAP tweens this each section
+const cameraTarget = new THREE.Vector3(0, 0, 0);
+
+// Smoothly move camera to a new position
+function moveCam(px, py, pz, dur = 0.9) {
+  gsap.to(camera.position, { x:px, y:py, z:pz, duration:dur, ease:'power2.inOut', overwrite:'auto' });
+}
+
+// ── Lights ────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+
+const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+sun.position.set(5, 8, 6);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+scene.add(sun);
+
+const blueKey = new THREE.PointLight(0x267897, 3.5, 18);
+blueKey.position.set(-3, 2, 4);
+scene.add(blueKey);
+
+const blueRim = new THREE.PointLight(0x267897, 1.2, 20);
+blueRim.position.set(3, -2, -3);
+scene.add(blueRim);
+
+// ── Materials ────────────────────────────────────────────────────
+const M = {
+  cover : new THREE.MeshStandardMaterial({ color:0x267897, metalness:0.82, roughness:0.18 }),
+  box   : new THREE.MeshStandardMaterial({ color:0x1a5c72, metalness:0.72, roughness:0.28 }),
+  pcb   : new THREE.MeshStandardMaterial({ color:0x1e7c1e, metalness:0.08, roughness:0.72 }),
+  chip  : new THREE.MeshStandardMaterial({ color:0x1a1a2e, metalness:0.92, roughness:0.08 }),
+  gold  : new THREE.MeshStandardMaterial({ color:0xccaa00, metalness:1.0,  roughness:0.15 }),
+  white : new THREE.MeshStandardMaterial({ color:0xf8f8f8, metalness:0.1,  roughness:0.65 }),
+};
+
+// ── Device sub-groups (separate scene children) ──────────────────
+const coverGroup = new THREE.Group();
+const boxGroup   = new THREE.Group();
+const pcbGroup   = new THREE.Group();
+scene.add(coverGroup, boxGroup, pcbGroup);
+
+// Cover — top lid
+const coverBody = new THREE.Mesh(
+  new THREE.BoxGeometry(2.1, 0.18, 1.35),
+  M.cover
+);
+coverGroup.add(coverBody);
+
+// Chamfered edge ring on cover
+const coverRing = new THREE.Mesh(
+  new THREE.BoxGeometry(2.14, 0.04, 1.39),
+  new THREE.MeshStandardMaterial({ color:0x3a9cbf, metalness:0.9, roughness:0.1 })
+);
+coverRing.position.y = -0.08;
+coverGroup.add(coverRing);
+
+// Box — bottom enclosure
+const boxBody = new THREE.Mesh(
+  new THREE.BoxGeometry(2.1, 0.6, 1.35),
+  M.box
+);
+boxGroup.add(boxBody);
+
+// PCB — the board
+const pcbBoard = new THREE.Mesh(
+  new THREE.BoxGeometry(1.9, 0.06, 1.15),
+  M.pcb
+);
+pcbGroup.add(pcbBoard);
+
+// PCB components
+function addComp(geo, mat, x, y, z) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  pcbGroup.add(m);
+  return m;
+}
+
+addComp(new THREE.BoxGeometry(0.65, 0.09, 0.45), M.chip,  0,     0.075, 0);
+addComp(new THREE.BoxGeometry(0.28, 0.07, 0.28), M.chip, -0.55,  0.065, 0.22);
+addComp(new THREE.BoxGeometry(0.22, 0.06, 0.22), M.chip,  0.52,  0.06, -0.22);
+addComp(new THREE.BoxGeometry(0.5,  0.05, 0.14), M.gold,  0.62,  0.055,  0.3);
+addComp(new THREE.BoxGeometry(0.12, 0.12, 0.12), M.white,-0.7,   0.09, -0.25);
+addComp(new THREE.BoxGeometry(0.08, 0.1,  0.08), M.white, 0.7,   0.08,  0.3);
+
+// Half-heights used to seat cover flush on box top (updated when GLBs load)
+let boxHY = 0.30;  // half-height of box model (default matches placeholder)
+let covHY = 0.09;  // half-height of cover model (default matches placeholder)
+
+// y = the Y-centre of the box. Cover sits on top; PCB floats inside near the top.
+function assembleAt(x, y, z, scale) {
+  [coverGroup, boxGroup, pcbGroup].forEach(g => g.scale.setScalar(scale));
+  boxGroup.position.set(x, y, z);
+  coverGroup.position.set(x, y + (boxHY + covHY) * scale, z);
+  pcbGroup.position.set(x, y + boxHY * scale * 0.78, z);
+}
+
+assembleAt(0, -1.0, 0, 0.85);
+
+// Store assembly reference
+const deviceGroups = [coverGroup, boxGroup, pcbGroup];
+
+function showDevice(on) { deviceGroups.forEach(g => g.visible = on); }
+function showCoverBox(on) {
+  coverGroup.visible = on;
+  boxGroup.visible = on;
+}
+function showPCB(on) { pcbGroup.visible = on; }
+
+// ── Full-assembly model (hero section) ───────────────────────────
+const completeGroup = new THREE.Group();
+completeGroup.visible = false;
+scene.add(completeGroup);
+function showComplete(on) { completeGroup.visible = on; }
+
+// ── Component placeholder meshes ─────────────────────────────────
+function makeESP32() {
+  const g = new THREE.Group();
+  g.add(Object.assign(
+    new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.13, 0.85), M.chip), {}
+  ));
+  // Label stripe
+  const lbl = new THREE.Mesh(
+    new THREE.BoxGeometry(0.7, 0.01, 0.5),
+    new THREE.MeshStandardMaterial({ color:0x267897, roughness:0.8, metalness:0.1 })
+  );
+  lbl.position.y = 0.07;
+  g.add(lbl);
+  // Pin rows
+  const pins = new THREE.Mesh(
+    new THREE.BoxGeometry(1.3, 0.04, 0.05),
+    M.gold
+  );
+  pins.position.set(0, -0.06, 0.45);
+  g.add(pins);
+  const pins2 = pins.clone();
+  pins2.position.z = -0.45;
+  g.add(pins2);
+  return g;
+}
+
+function makeDisplay() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.09, 1.1), M.chip));
+  const screen = new THREE.Mesh(
+    new THREE.BoxGeometry(1.5, 0.02, 0.95),
+    new THREE.MeshStandardMaterial({
+      color:0x267897, emissive:0x267897,
+      emissiveIntensity:0.6, roughness:0.1
+    })
+  );
+  screen.position.y = 0.055;
+  g.add(screen);
+  return g;
+}
+
+function makeSensor() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.85, 32), M.white));
+  const cap = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.3, 0.06, 32),
+    new THREE.MeshStandardMaterial({ color:0x267897, metalness:0.85 })
+  );
+  cap.position.y = 0.455;
+  g.add(cap);
+  // Legs
+  for (let i = -1; i <= 1; i++) {
+    const leg = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.3, 0.04),
+      M.gold
+    );
+    leg.position.set(i * 0.12, -0.575, 0);
+    g.add(leg);
+  }
+  return g;
+}
+
+function makeBattery() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.52, 1.05),
+    new THREE.MeshStandardMaterial({ color:0x1a1a2e, metalness:0.25, roughness:0.65 })
+  ));
+  const stripe = new THREE.Mesh(
+    new THREE.BoxGeometry(1.92, 0.14, 0.12),
+    new THREE.MeshStandardMaterial({ color:0x267897, emissive:0x267897, emissiveIntensity:0.35 })
+  );
+  stripe.position.y = 0.17;
+  g.add(stripe);
+  const plus = new THREE.Mesh(
+    new THREE.BoxGeometry(0.1, 0.08, 0.1),
+    M.gold
+  );
+  plus.position.set(0.88, 0.3, 0);
+  g.add(plus);
+  return g;
+}
+
+function makePlaceholder() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.8), M.white));
+  return g;
+}
+const compMeshes = [makeESP32(), makeDisplay(), makeSensor(), makeBattery(), makePlaceholder(), makePlaceholder()];
+compMeshes.forEach(m => {
+  m.visible = false;
+  scene.add(m);
+});
+
+let currentComp = 0;
+
+// ── Particles (team section) ──────────────────────────────────────
+const isMobile = W() < 768;
+const PCOUNT = isMobile ? 600 : 1200;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(PCOUNT * 3);
+for (let i = 0; i < PCOUNT * 3; i++) pPos[i] = (Math.random() - 0.5) * 28;
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+const pMat = new THREE.PointsMaterial({
+  color:0x267897, size: isMobile ? 0.06 : 0.04,
+  transparent:true, opacity:0
+});
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+
+// ── GLB loader (with fallback) ────────────────────────────────────
+const loader = new GLTFLoader();
+const bbox = new THREE.Box3();
+const bsize = new THREE.Vector3();
+
+// Auto-scale a loaded model so its largest dimension = targetSize
+function autoScale(model, targetSize = 2.0) {
+  bbox.setFromObject(model);
+  bbox.getSize(bsize);
+  const maxDim = Math.max(bsize.x, bsize.y, bsize.z);
+  if (maxDim > 0) model.scale.setScalar(targetSize / maxDim);
+  // Centre the model on its own pivot
+  bbox.setFromObject(model);
+  const centre = new THREE.Vector3();
+  bbox.getCenter(centre);
+  model.position.sub(centre);
+}
+
+function tryGLB(url, onDone) {
+  loader.load(url,
+    gltf => {
+      gltf.scene.traverse(n => {
+        if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; }
+      });
+      onDone(gltf.scene);
+    },
+    undefined,
+    () => {} // silently ignore missing files — placeholder mesh stays
+  );
+}
+
+// Attempt real GLBs — auto-scaled to fit the scene units
+tryGLB('device_cover.glb', model => {
+  autoScale(model, 2.1);
+  coverGroup.clear();
+  coverGroup.add(model);
+  // Measure half-height so assembleAt can seat cover flush on box top
+  const b = new THREE.Box3().setFromObject(model);
+  const s = new THREE.Vector3();
+  b.getSize(s);
+  covHY = s.y * 0.5;
+});
+tryGLB('device_box.glb', model => {
+  autoScale(model, 2.1);
+  boxGroup.clear();
+  boxGroup.add(model);
+  // Measure half-height
+  const b = new THREE.Box3().setFromObject(model);
+  const s = new THREE.Vector3();
+  b.getSize(s);
+  boxHY = s.y * 0.5;
+});
+tryGLB('device_pcb.glb', model => {
+  autoScale(model, 1.95);
+  pcbGroup.clear();
+  pcbGroup.add(model);
+});
+
+// Load full assembled model — used exclusively in hero section
+tryGLB('device_complete.glb', model => {
+  autoScale(model, 3.0);
+  model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+  completeGroup.add(model);
+});
+
+const compFiles = ['esp.glb','screen.glb','bme.glb','tp4056.glb','adxl345.glb','mt3608.glb'];
+compFiles.forEach((f, i) => {
+  tryGLB(f, model => {
+    autoScale(model, 2.2); // scale to fit; centering offset stays on the inner model
+    const wrapper = new THREE.Group();
+    wrapper.add(model);    // wrapper's origin = scene position; model is centered inside
+    if (compMeshes[i]) {
+      compMeshes[i].visible = false;
+    }
+    compMeshes[i] = wrapper;
+    scene.add(wrapper);
+    wrapper.visible = false;
+  });
+});
+
+// ── State ─────────────────────────────────────────────────────────
+let phase = 'hero';
+let time  = 0;
+let heroSpin = true;
+const clock = new THREE.Clock();
+
+// Returns desktop value on wide screens, mobile value on narrow screens
+function m(desktop, mobile) { return W() < 768 ? mobile : desktop; }
+
+// ── Animate loop ──────────────────────────────────────────────────
+(function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  time += dt;
+
+  if (phase === 'hero') {
+    if (heroSpin) {
+      completeGroup.rotation.y += dt * 0.38;
+    }
+    const floatY = heroSpin ? Math.sin(time * 0.75) * 0.07 : 0;
+    completeGroup.position.y = -0.4 + floatY;
+  }
+
+  if (phase === 'problem' || phase === 'requirements' || phase === 'solution' ||
+      phase === 'users'   || phase === 'arch') {
+    completeGroup.rotation.y += dt * 0.28;
+  }
+
+  if (phase === 'components') {
+    const cm = compMeshes[currentComp];
+    if (cm) cm.rotation.y += dt * 0.55;
+  }
+
+  if (phase === 'pcb') {
+    // Drift pcb slowly when not scroll-driven
+  }
+
+  if (phase === 'team') {
+    particles.rotation.y += dt * 0.025;
+    particles.rotation.x += dt * 0.008;
+  }
+
+  // Re-apply lookAt every frame so GSAP-tweened cameraTarget is tracked
+  camera.lookAt(cameraTarget);
+  renderer.render(scene, camera);
+}());
+
+// ── Resize ────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = W() / H();
+  camera.updateProjectionMatrix();
+  renderer.setSize(W(), H());
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  ScrollTrigger.refresh();
+});
+
+// ════════════════════════════════════════════════════════════════
+//  GSAP SCROLL TRIGGERS
+// ════════════════════════════════════════════════════════════════
+
+// Nav fade in
+gsap.to('#nav-logo', { opacity:1, duration:1, delay:0.5 });
+
+// ── 1. HERO ──────────────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#section-hero',
+  start: 'top top',
+  end: '+=90%',
+  pin: true,
+  scrub: 1.8,
+  onEnter() {
+    phase = 'hero';
+    heroSpin = true;
+    showDevice(false);
+    showComplete(true);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    pMat.opacity = 0;
+    completeGroup.position.set(0, -0.4, 0);
+    completeGroup.scale.setScalar(1.0);
+    completeGroup.rotation.y = Math.PI * 0.22;
+    moveCam(0, 0.6, 5.5, 0.8);
+    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:0.8, overwrite:'auto' });
+  },
+  onEnterBack() {
+    phase = 'hero';
+    heroSpin = true;
+    showDevice(false);
+    showComplete(true);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    pMat.opacity = 0;
+    moveCam(0, 0.6, 5.5, 0.8);
+    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:0.8, overwrite:'auto' });
+  },
+  onUpdate(self) {
+    const p = self.progress;
+    heroSpin = p < 0.08;
+    gsap.set('#hero-inner', { opacity: Math.max(0, 1 - p*3), y: -p*35 });
+    gsap.set('#scroll-hint', { opacity: Math.max(0, 1 - p*6) });
+    completeGroup.position.x = p * m(2.3, 0);
+    completeGroup.position.z = -p * 0.8;
+    completeGroup.scale.setScalar(m(1.0, 0.58) - p * 0.12);
+  }
+});
+
+// ── 2. PROBLEM ───────────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#section-problem',
+  start: 'top top',
+  end: '+=110%',
+  pin: true,
+  scrub: 1.8,
+  onEnter() {
+    phase = 'problem';
+    heroSpin = false;
+    showComplete(true);
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    pMat.opacity = 0;
+    moveCam(0, 0.6, 5.5, 1.0);
+    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:1.0, overwrite:'auto' });
+    gsap.to(completeGroup.position, { x:m(2.3,0), y:m(0,1.2), z:0.2, duration:1.1, ease:'power3.inOut', overwrite:'auto' });
+    gsap.to(completeGroup.scale,    { x:m(.88,.48), y:m(.88,.48), z:m(.88,.48), duration:1.1, ease:'power3.inOut', overwrite:'auto' });
+    gsap.fromTo('.stat-card', {opacity:0,y:18}, {opacity:1,y:0,duration:.6,stagger:.12,ease:'power2.out'});
+  },
+  onEnterBack() {
+    phase = 'problem';
+    heroSpin = false;
+    showComplete(true);
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    moveCam(0, 0.6, 5.5, 0.8);
+    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:0.8, overwrite:'auto' });
+    gsap.to(completeGroup.position, { x:m(2.3,0), y:m(0,1.2), z:0.2, duration:0.8, ease:'power3.inOut', overwrite:'auto' });
+    gsap.to(completeGroup.scale,    { x:m(.88,.48), y:m(.88,.48), z:m(.88,.48), duration:0.8, ease:'power3.inOut', overwrite:'auto' });
+  }
+});
+
+// ── 3. REQUIREMENTS ──────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#section-requirements',
+  start: 'top top',
+  end: '+=120%',
+  pin: true,
+  scrub: 1.8,
+  onEnter() {
+    phase = 'requirements';
+    heroSpin = false;
+    showComplete(true);
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    moveCam(0, 0.6, 5.5, 1.0);
+    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:1.0, overwrite:'auto' });
+    // Left side below title — device moves from right (problem) to left (requirements)
+    gsap.to(completeGroup.position, { x:m(-2.2,0), y:m(-0.5,0.3), z:0, duration:1.1, ease:'power3.inOut', overwrite:'auto' });
+    gsap.to(completeGroup.scale,    { x:m(.78,0), y:m(.78,0), z:m(.78,0), duration:1.1, ease:'power3.inOut', overwrite:'auto' });
+    gsap.fromTo('.req-row', {opacity:0,x:-16}, {opacity:1,x:0,duration:.55,stagger:.08,ease:'power2.out'});
+  },
+  onEnterBack() {
+    phase = 'requirements';
+    heroSpin = false;
+    showComplete(true);
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    moveCam(0, 0.6, 5.5, 0.8);
+    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:0.8, overwrite:'auto' });
+    gsap.to(completeGroup.position, { x:m(-2.2,0), y:m(-0.3,0.3), z:0, duration:0.8, ease:'power3.inOut', overwrite:'auto' });
+    gsap.to(completeGroup.scale,    { x:m(.78,0), y:m(.78,0), z:m(.78,0), duration:0.8, ease:'power3.inOut', overwrite:'auto' });
+  }
+});
+
+// ── 4. SOLUTION ──────────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#section-solution',
+  start: 'top top',
+  end: '+=110%',
+  pin: true,
+  scrub: 1.8,
+  onEnter() {
+    phase = 'solution';
+    heroSpin = false;
+    showComplete(true);
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    moveCam(0, 0.6, 5.5, 1.0);
+    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:1.0, overwrite:'auto' });
+    gsap.to(completeGroup.position, { x:m(2.3,0), y:m(0,1.2), z:0.2, duration:1.1, ease:'power3.inOut', overwrite:'auto' });
+    gsap.to(completeGroup.scale,    { x:m(.88,.48), y:m(.88,.48), z:m(.88,.48), duration:1.1, ease:'power3.inOut', overwrite:'auto' });
+    gsap.fromTo('.pill', {opacity:0,scale:0.8}, {opacity:1,scale:1,duration:.5,stagger:.07,ease:'back.out(1.4)'});
+  },
+  onEnterBack() {
+    phase = 'solution';
+    heroSpin = false;
+    showComplete(true);
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    moveCam(0, 0.6, 5.5, 0.8);
+    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:0.8, overwrite:'auto' });
+    gsap.to(completeGroup.position, { x:m(2.3,0), y:m(0,1.2), z:0.2, duration:0.8, ease:'power3.inOut', overwrite:'auto' });
+    gsap.to(completeGroup.scale,    { x:m(.88,.48), y:m(.88,.48), z:m(.88,.48), duration:0.8, ease:'power3.inOut', overwrite:'auto' });
+  },
+  onLeave() {
+    // Fade device into depth before users section (no 3D in users)
+    gsap.to(completeGroup.scale,    { x:0, y:0, z:0, duration:0.55, ease:'power2.in', overwrite:'auto' });
+    gsap.to(completeGroup.position, { z:-4, duration:0.55, ease:'power2.in', overwrite:'auto',
+      onComplete() { showComplete(false); } });
+  }
+});
+
+// ── 5. USERS ─────────────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#section-users',
+  start: 'top top',
+  end: '+=100%',
+  pin: true,
+  scrub: 1.8,
+  onEnter() {
+    phase = 'users';
+    heroSpin = false;
+    showComplete(false);
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    gsap.fromTo('.user-card', {opacity:0,y:20}, {opacity:1,y:0,duration:.6,stagger:.14,ease:'power2.out'});
+  },
+  onEnterBack() {
+    phase = 'users';
+    heroSpin = false;
+    showComplete(false);
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+  }
+});
+
+// ── 6. ARCH ──────────────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#section-arch',
+  start: 'top top',
+  end: '+=120%',
+  pin: true,
+  scrub: 1.8,
+  onEnter() {
+    phase = 'arch';
+    heroSpin = false;
+    showComplete(false);
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    gsap.fromTo(['.arch-node','.arch-arrow'],
+      {opacity:0, scale:0.85},
+      {opacity:1, scale:1, duration:.5, stagger:.1, ease:'power2.out'}
+    );
+  },
+  onEnterBack() {
+    phase = 'arch';
+    heroSpin = false;
+    showComplete(false);
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+  }
+});
+
+// ── 7. TECH ──────────────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#section-tech',
+  start: 'top top',
+  end: '+=100%',
+  pin: true,
+  scrub: 1.8,
+  onEnter() {
+    phase = 'tech';
+    heroSpin = false;
+    showDevice(false);
+    showComplete(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    gsap.fromTo('.tech-card',
+      {opacity:0, y:18},
+      {opacity:1, y:0, duration:.5, stagger:.06, ease:'power2.out'}
+    );
+  },
+  onEnterBack() {
+    phase = 'tech';
+    heroSpin = false;
+    showDevice(false);
+    showComplete(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+  }
+});
+
+// ── 8. EXPLODE ───────────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#section-explode',
+  start: 'top top',
+  end: '+=320%',
+  pin: true,
+  scrub: 2.0,
+  onEnter() {
+    phase = 'explode';
+    heroSpin = false;
+    showComplete(false);
+    showDevice(true);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    pMat.opacity = 0;
+    // Top-down view — cover offset in Z so it's always visually in front of box
+    moveCam(0, 6.5, 2.5, 1.1);
+    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:1.1, overwrite:'auto' });
+    [coverGroup, boxGroup, pcbGroup].forEach(g => {
+      g.scale.setScalar(m(2.4, 1.4));
+      g.rotation.set(0, 0, 0);
+    });
+    // Cover starts already in front of box in Z
+    coverGroup.position.set(0, 0, 1.0);
+    boxGroup.position.set(0, 0, 0);
+    pcbGroup.position.set(0, 0, 0.5);
+    pcbGroup.scale.setScalar(m(2.0, 1.2)); // PCB a bit smaller than cover/box
+  },
+  onEnterBack() {
+    phase = 'explode';
+    heroSpin = false;
+    showComplete(false);
+    showDevice(true);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    moveCam(0, 6.5, 2.5, 0.8);
+    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:0.8, overwrite:'auto' });
+    [coverGroup, boxGroup].forEach(g => {
+      g.scale.setScalar(m(2.4, 1.4));
+      g.rotation.set(0, 0, 0);
+    });
+    pcbGroup.scale.setScalar(m(2.0, 1.2));
+    pcbGroup.rotation.set(0, 0, 0);
+  },
+  onLeave() {
+    showCoverBox(false);
+    pcbGroup.rotation.set(0, 0, 0);
+  },
+  onLeaveBack() {
+    showDevice(true);
+    moveCam(0, 0.6, 5.5, 0.8);
+    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:0.8, overwrite:'auto' });
+  },
+  onUpdate(self) {
+    const p = self.progress;
+    const TRAVEL  = m(5.5, 3.2);
+    const COVER_Z = 1.0;
+    const PCB_Z   = 0.5;
+    const TILT    = -Math.PI * 0.3; // backward tilt on cover (lid opens away from viewer)
+
+    if (p < 0.45) {
+      const sp = p / 0.45;
+      coverGroup.position.set( sp * TRAVEL, 0, COVER_Z);
+      coverGroup.rotation.set(TILT * sp, 0, 0);
+      boxGroup.position.set(  -sp * TRAVEL, 0, 0);
+      boxGroup.rotation.set(0, 0, 0);
+      pcbGroup.position.set(0, 0, PCB_Z);
+      pcbGroup.rotation.set(0, 0, 0);
+      pcbGroup.scale.setScalar(m(2.0, 1.2));
+    } else if (p < 0.68) {
+      // Hold — everything spread open, lid fully tilted back
+      coverGroup.position.set( TRAVEL, 0, COVER_Z);
+      coverGroup.rotation.set(TILT, 0, 0);
+      boxGroup.position.set(  -TRAVEL, 0, 0);
+      boxGroup.rotation.set(0, 0, 0);
+      pcbGroup.position.set(0, 0, PCB_Z);
+      pcbGroup.rotation.set(0, 0, 0);
+      pcbGroup.scale.setScalar(m(2.0, 1.2));
+    } else {
+      // Transition: cover/box exit further, camera settles to PCB section start
+      const zp = (p - 0.68) / 0.32;
+      const ease = zp * zp * (3 - 2 * zp); // smoothstep
+      coverGroup.position.set( TRAVEL + ease * 4.0, 0, COVER_Z);
+      coverGroup.rotation.set(TILT, 0, 0);
+      boxGroup.position.set(  -TRAVEL - ease * 4.0, 0, 0);
+      boxGroup.rotation.set(0, 0, 0);
+      pcbGroup.position.set(0, 0, PCB_Z);
+      pcbGroup.rotation.set(0, 0, 0);
+      pcbGroup.scale.setScalar(m(2.0, 1.2) - ease * m(0.2, 0.25)); // → matches PCB section onEnter
+      // Camera lands exactly at PCB section's starting position — no jump on enter
+      gsap.killTweensOf(camera.position);
+      camera.position.y = 6.5 - ease * 1.0; // 6.5 → 5.5
+      camera.position.z = 2.5 + ease * 0.5; // 2.5 → 3.0
+    }
+
+    const hint = document.getElementById('explode-hint');
+    if (hint) hint.style.opacity = Math.max(0, 1 - p * 6).toString();
+  }
+});
+
+// ── 9. COMPONENTS ────────────────────────────────────────────────
+const NCOMP = 6;
+
+function switchComp(idx) {
+  if (idx === currentComp) return;
+  const prevIdx = currentComp;
+  compMeshes[prevIdx] && (compMeshes[prevIdx].visible = false);
+  currentComp = idx;
+  compMeshes[idx] && (compMeshes[idx].visible = true);
+  if (compMeshes[idx]) {
+    compMeshes[idx].rotation.set(0, 0, 0);
+    compMeshes[idx].position.set(m(-1.8, 0), m(0, 0.9), 0);
+    compMeshes[idx].scale.setScalar(m(1.0, 0.65));
+  }
+
+  const prevEl = prevIdx >= 0 ? document.getElementById(`cpanel-${prevIdx}`) : null;
+  const nextEl = document.getElementById(`cpanel-${idx}`);
+
+  // Fade out previous panel
+  if (prevEl) {
+    gsap.to(prevEl, {
+      opacity: 0, y: -10, duration: 0.2, ease: 'power2.in',
+      onComplete() { prevEl.style.display = 'none'; }
+    });
+  }
+  // Fade in next panel
+  if (nextEl) {
+    if (prevIdx < 0) {
+      nextEl.style.display = 'block';
+      gsap.set(nextEl, { opacity: 1, y: 0 });
+    } else {
+      gsap.set(nextEl, { y: 14, opacity: 0 });
+      nextEl.style.display = 'block';
+      gsap.to(nextEl, { opacity: 1, y: 0, duration: 0.32, ease: 'power2.out', delay: 0.15 });
+    }
+  }
+
+  for (let i = 0; i < NCOMP; i++) {
+    const dot = document.getElementById(`pd${i}`);
+    if (dot) dot.classList.toggle('active', i === idx);
+  }
+}
+
+ScrollTrigger.create({
+  trigger: '#section-components',
+  start: 'top top',
+  end: `+=${NCOMP * 130}%`,
+  pin: true,
+  scrub: 2.0,
+  onEnter() {
+    phase = 'components';
+    heroSpin = false;
+    showDevice(false);
+    moveCam(m(1.2,0), m(2.5,1.5), m(4.5,5.5), 0.9);
+    gsap.to(cameraTarget, { x:m(1.2,0), y:m(0,0.7), z:0, duration:0.9, overwrite:'auto' });
+    currentComp = -1;
+    switchComp(0);
+    if (compMeshes[0]) {
+      compMeshes[0].position.set(m(-1.8,0), m(0,0.9), 0);
+      compMeshes[0].scale.setScalar(m(1.0, 0.65));
+    }
+  },
+  onEnterBack() {
+    phase = 'components';
+    heroSpin = false;
+    showDevice(false);
+    moveCam(m(1.2,0), m(2.5,1.5), m(4.5,5.5), 0.8);
+    gsap.to(cameraTarget, { x:m(1.2,0), y:m(0,0.7), z:0, duration:0.8, overwrite:'auto' });
+  },
+  onUpdate(self) {
+    const idx = Math.min(Math.floor(self.progress * NCOMP), NCOMP - 1);
+    switchComp(idx);
+  }
+});
+
+// ── 10. PCB ──────────────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#section-pcb',
+  start: 'top top',
+  end: '+=170%',
+  pin: true,
+  scrub: 1.8,
+  onEnter() {
+    phase = 'pcb';
+    heroSpin = false;
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    showCoverBox(false);
+    showPCB(true);
+    moveCam(0, 0.6, 5.5, 1.2);
+    gsap.to(cameraTarget, { x:0, y:m(0, 0.6), z:0, duration:1.2, overwrite:'auto' });
+    pcbGroup.scale.setScalar(m(1.8, 0.95));
+    pcbGroup.rotation.set(0, 0, 0);
+    pcbGroup.position.set(m(-2.3, 0), m(0, 1.0), 0);
+  },
+  onEnterBack() {
+    phase = 'pcb';
+    heroSpin = false;
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    showCoverBox(false);
+    showPCB(true);
+    moveCam(0, 0.6, 5.5, 0.9);
+    gsap.to(cameraTarget, { x:0, y:m(0, 0.6), z:0, duration:0.9, overwrite:'auto' });
+    pcbGroup.scale.setScalar(m(1.8, 0.95));
+    pcbGroup.position.set(m(-2.3, 0), m(0, 1.0), 0);
+  },
+  onUpdate(self) {
+    const p = self.progress;
+    pcbGroup.rotation.y = p * Math.PI;
+    pcbGroup.rotation.x = Math.sin(p * Math.PI) * 0.18;
+    pcbGroup.position.set(m(-2.3, 0), m(0, 1.0), 0);
+  },
+  onLeave() {
+    gsap.to(pcbGroup.scale, { x:0, y:0, z:0, duration:0.6, ease:'power2.in', overwrite:'auto',
+      onComplete() { showPCB(false); }
+    });
+    gsap.to(pcbGroup.position, { z:-3, duration:0.6, ease:'power2.in', overwrite:'auto' });
+  }
+});
+
+// ── 11. WEBAPP ───────────────────────────────────────────────────
+const N_SCREENS = 6;
+let currentScreen = -1;
+
+function switchScreen(idx) {
+  if (idx === currentScreen) return;
+  const prev = currentScreen;
+  currentScreen = idx;
+
+  // Cross-fade screenshots
+  if (prev >= 0) {
+    const pImg = document.getElementById(`app-ss-${prev}`);
+    if (pImg) gsap.to(pImg, { opacity:0, duration:0.45, ease:'power2.inOut' });
+    const pPanel = document.getElementById(`app-sp-${prev}`);
+    if (pPanel) gsap.to(pPanel, { opacity:0, y:-12, duration:0.25, ease:'power2.in' });
+  }
+  const nImg = document.getElementById(`app-ss-${idx}`);
+  if (nImg) gsap.to(nImg, { opacity:1, duration:0.45, ease:'power2.inOut', delay: prev >= 0 ? 0.1 : 0 });
+  const nPanel = document.getElementById(`app-sp-${idx}`);
+  if (nPanel) gsap.fromTo(nPanel,
+    { opacity:0, y:16 },
+    { opacity:1, y:0, duration:0.38, ease:'power2.out', delay: prev >= 0 ? 0.18 : 0 }
+  );
+
+  for (let i = 0; i < N_SCREENS; i++) {
+    const d = document.getElementById(`phd${i}`);
+    if (d) d.classList.toggle('active', i === idx);
+  }
+}
+
+ScrollTrigger.create({
+  trigger: '#section-webapp',
+  start: 'top top',
+  end: `+=${N_SCREENS * 80}%`,
+  pin: true,
+  scrub: 1.8,
+  onEnter() {
+    phase = 'webapp';
+    heroSpin = false;
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    pMat.opacity = 0;
+    moveCam(0, 0.6, 5.5, 0.9);
+    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:0.9, overwrite:'auto' });
+    gsap.to('#phone-outer', { opacity:1, y:0, scale:1, duration:0.85, ease:'power3.out' });
+    currentScreen = -1;
+    switchScreen(0);
+  },
+  onEnterBack() {
+    phase = 'webapp';
+    heroSpin = false;
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    gsap.to('#phone-outer', { opacity:1, y:0, scale:1, duration:0.5, ease:'power2.out' });
+  },
+  onUpdate(self) {
+    const idx = Math.min(Math.floor(self.progress * N_SCREENS), N_SCREENS - 1);
+    switchScreen(idx);
+  }
+});
+
+// ── 12. VIDEO ────────────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#section-video',
+  start: 'top top',
+  end: '+=90%',
+  pin: true,
+  scrub: 1.8,
+  onEnter() {
+    phase = 'video';
+    heroSpin = false;
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    gsap.to('#vid-outer', {opacity:1, scale:1, duration:.8, ease:'power2.out'});
+  },
+  onEnterBack() {
+    phase = 'video';
+    heroSpin = false;
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+  }
+});
+
+// ── 13. NEXT STEPS ───────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#section-next',
+  start: 'top top',
+  end: '+=130%',
+  pin: true,
+  scrub: 1.8,
+  onEnter() {
+    phase = 'next';
+    heroSpin = false;
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    gsap.fromTo('.tl-item',
+      {opacity:0, y:18},
+      {opacity:1, y:0, duration:.6, stagger:.14, ease:'power2.out'}
+    );
+  },
+  onEnterBack() {
+    phase = 'next';
+    heroSpin = false;
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+  },
+  onUpdate(self) {
+    const fill = document.getElementById('tl-fill');
+    if (fill) fill.style.width = (self.progress * 100) + '%';
+  }
+});
+
+// ── 14. TEAM ─────────────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#section-team',
+  start: 'top top',
+  end: '+=100%',
+  pin: true,
+  scrub: 1.8,
+  onEnter() {
+    phase = 'team';
+    heroSpin = false;
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    gsap.to(pMat, {opacity:.45, duration:1.4, ease:'power2.out'});
+    gsap.fromTo('.team-card',
+      {opacity:0, y:18},
+      {opacity:1, y:0, duration:.65, stagger:.12, ease:'power2.out'}
+    );
+    gsap.to('#thanks',    {opacity:1, duration:.9, delay:.5, ease:'power2.out'});
+    gsap.to('#final-cap', {opacity:1, duration:.9, delay:.8, ease:'power2.out'});
+  },
+  onEnterBack() {
+    phase = 'team';
+    heroSpin = false;
+    showDevice(false);
+    compMeshes.forEach(c => { if(c) c.visible = false; });
+    gsap.to(pMat, {opacity:.45, duration:.6});
+  },
+  onLeaveBack() {
+    gsap.to(pMat, {opacity:0, duration:.6});
+  }
+});
+
+// ── Kick off ─────────────────────────────────────────────────────
+ScrollTrigger.refresh();
+</script>
+</body>
+</html>
