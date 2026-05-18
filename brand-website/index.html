@@ -721,13 +721,14 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hid
   .u-desc{font-size:13px;line-height:1.65}
 
   /* Architecture */
-  .arch-wrap{flex-direction:column;gap:1rem;padding:1.25rem 0;margin-top:.5rem}
-  .arch-arrow{transform:rotate(90deg)}
-  .arch-line{width:28px}
+  .arch-wrap{flex-direction:column;gap:.5rem;padding:1.25rem 0;margin-top:.5rem}
+  .arch-arrow{transform:none;flex-direction:column;align-items:center;padding:.1rem 0}
+  .arch-line{width:2px;height:24px;background:linear-gradient(to bottom,var(--blue),rgba(38,120,151,.4))}
+  .arch-line::after{right:auto;top:auto;bottom:-5px;left:-4px;border-left-color:transparent;border-top-color:var(--blue)}
+  .arch-proto{margin-top:2px;transform:none;font-size:9px}
   .arch-box{padding:.65rem .9rem;min-width:85px}
   .arch-box-name{font-size:12px}
   .arch-box-sub{font-size:10px}
-  .arch-proto{font-size:9px}
 
   /* Tech grid */
   .tech-grid{grid-template-columns:1fr 1fr;gap:.65rem;margin-top:1.25rem}
@@ -739,7 +740,7 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hid
 
   /* Components */
   .comp-layout{flex-direction:column}
-  .comp-3d-zone{height:38vh;flex:none;width:100%}
+  .comp-3d-zone{height:50vh;flex:none;width:100%}
   .comp-text-zone{
     border-left:none;border-top:1px solid var(--b20);
     padding:1.4rem 1.2rem;overflow-y:auto;
@@ -762,7 +763,7 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hid
 
   /* PCB — 3D zone on top, text below on mobile */
   #section-pcb .split{flex-direction:column;gap:.75rem}
-  #section-pcb .split-l{min-height:52vh;flex:none}
+  #section-pcb .split-l{min-height:58vh;flex:none}
 
   /* Timeline */
   .timeline-wrap{flex-direction:column;gap:0;margin-top:1.5rem}
@@ -789,15 +790,184 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hid
 
 /* Mobile 3D layout fixes */
 @media(max-width:768px){
-  /* Reverse stack so empty 3D side is on top, text below */
+  /* Sections stretch full height — eliminates centre-aligned sparse whitespace */
+  #section-problem,#section-solution{align-items:stretch;padding:0}
+  #section-problem .container,
+  #section-solution .container{
+    display:flex;flex-direction:column;
+    min-height:100svh;
+    padding-top:3.5rem;padding-bottom:2rem;
+  }
+  /* Reverse stack: 3D zone on top, text at bottom */
   #section-problem .split,
-  #section-solution .split { flex-direction:column-reverse }
+  #section-solution .split{flex:1;flex-direction:column-reverse;gap:.75rem;min-height:0}
+  /* 3D zone flexes to fill all remaining space above the text */
   #section-problem .split-r,
-  #section-solution .split-r { min-height:36vh;flex:none }
-  /* Reduce gap so content fits in 100svh */
-  #section-problem .split,
-  #section-solution .split { gap:.75rem }
+  #section-solution .split-r{flex:1;min-height:160px}
+  /* Hide verbose body text only in problem — solution keeps 1 paragraph for context */
+  #section-problem .body-text{display:none}
 }
+
+/* ── FUTURISTIC ENHANCEMENTS ────────────────────────────────────── */
+
+/* Scroll progress bar */
+#scroll-progress{
+  position:fixed;top:0;left:0;height:2px;width:0%;
+  background:linear-gradient(to right,var(--blue),rgba(38,120,151,.45));
+  z-index:9999;pointer-events:none;
+  box-shadow:0 0 12px rgba(38,120,151,.55),0 0 4px rgba(38,120,151,.8);
+}
+
+/* Hero glitch */
+@keyframes glitch{
+  0%,82%,100%{text-shadow:none;transform:none}
+  83%{transform:translate(-2px,0);text-shadow:2px 0 rgba(38,120,151,.55),-2px 0 rgba(255,80,30,.25)}
+  84%{transform:translate(2px,0);text-shadow:-2px 0 rgba(38,120,151,.55),2px 0 rgba(255,80,30,.25)}
+  85%{transform:none;text-shadow:none}
+  87%{transform:translate(0,-1px);text-shadow:0 1px rgba(38,120,151,.4)}
+  88%{transform:none;text-shadow:none}
+}
+.hero-title{animation:glitch 10s ease-in-out infinite}
+
+/* Nav logo glow */
+.nav-logo{text-shadow:0 0 18px rgba(38,120,151,.4);letter-spacing:.22em}
+
+/* Label accent line */
+.label{display:flex;align-items:center;gap:.65rem}
+.label::before{
+  content:'';flex-shrink:0;width:20px;height:1px;
+  background:var(--blue);
+  box-shadow:0 0 6px rgba(38,120,151,.7);
+}
+
+/* Architecture — data flow animation on connecting lines */
+@keyframes dataflow{
+  0%{opacity:0;transform:scaleX(0);transform-origin:left center}
+  25%{opacity:1;transform:scaleX(1)}
+  75%{opacity:1;transform:scaleX(1)}
+  100%{opacity:0;transform:scaleX(1)}
+}
+@keyframes dataflow-v{
+  0%{opacity:0;transform:scaleY(0);transform-origin:top center}
+  25%{opacity:1;transform:scaleY(1)}
+  75%{opacity:1;transform:scaleY(1)}
+  100%{opacity:0;transform:scaleY(1)}
+}
+.arch-line{position:relative;overflow:visible}
+.arch-line::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to right,transparent,rgba(38,120,151,.85),transparent);
+  animation:dataflow 2.6s ease-in-out infinite;
+}
+#aa0 .arch-line::before{animation-delay:0s}
+#aa1 .arch-line::before{animation-delay:.85s}
+#aa2 .arch-line::before{animation-delay:1.7s}
+@media(max-width:768px){
+  .arch-line::before{
+    background:linear-gradient(to bottom,transparent,rgba(38,120,151,.85),transparent);
+    animation-name:dataflow-v;
+  }
+}
+
+/* Arch node glow on hover */
+.arch-box{transition:box-shadow .35s var(--ease),border-color .35s}
+.arch-box:hover{
+  border-color:rgba(38,120,151,.7);
+  box-shadow:0 0 22px rgba(38,120,151,.22),inset 0 0 10px rgba(38,120,151,.05);
+}
+
+/* Tech card scan-line hover */
+.tech-card{position:relative;overflow:hidden}
+.tech-card::after{
+  content:'';position:absolute;
+  top:-120%;left:0;right:0;height:100%;
+  background:linear-gradient(transparent,rgba(38,120,151,.07),transparent);
+  transition:top .55s ease;pointer-events:none;
+}
+.tech-card:hover::after{top:100%}
+.tech-card:hover{
+  border-color:rgba(38,120,151,.45);
+  box-shadow:0 0 28px rgba(38,120,151,.16),0 0 0 1px rgba(38,120,151,.18);
+}
+
+/* Stat card micro-interaction */
+.stat-card{transition:transform .3s var(--ease),box-shadow .3s var(--ease),border-color .3s}
+.stat-card:hover{
+  transform:translateY(-4px);
+  border-color:rgba(38,120,151,.5);
+  box-shadow:0 10px 28px rgba(38,120,151,.16);
+}
+
+/* User card hover */
+.user-card:hover{
+  transform:translateY(-5px);
+  border-color:rgba(38,120,151,.5);
+  box-shadow:0 14px 36px rgba(38,120,151,.16);
+}
+
+/* Pill micro-interaction */
+.pill{
+  transition:background .2s,border-color .2s,transform .25s var(--ease),box-shadow .25s;
+  cursor:default;
+}
+.pill:hover{
+  background:rgba(38,120,151,.2);
+  border-color:rgba(38,120,151,.45);
+  transform:scale(1.05);
+  box-shadow:0 0 14px rgba(38,120,151,.18);
+}
+
+/* Active progress dot glow */
+.progress-dot.active,.ph-dot.active{
+  box-shadow:0 0 10px rgba(38,120,151,.7);
+}
+
+/* Phone frame glow */
+.phone-frame{
+  box-shadow:0 40px 80px rgba(0,0,0,.18),
+    0 0 0 1px rgba(38,120,151,.18),
+    0 0 48px rgba(38,120,151,.12),
+    inset 0 0 0 2px rgba(255,255,255,.04);
+}
+
+/* 3D label breathing */
+@keyframes breathe{0%,100%{opacity:.28}50%{opacity:.55}}
+.comp-3d-label{animation:breathe 3.2s ease-in-out infinite}
+
+/* Ambient scan line on each section */
+@keyframes scan{0%{top:-1px}100%{top:calc(100% + 1px)}}
+.section{overflow:hidden}
+.section::after{
+  content:'';position:absolute;
+  left:0;right:0;height:1px;top:-1px;
+  background:linear-gradient(to right,transparent,rgba(38,120,151,.12),transparent);
+  animation:scan 12s linear infinite;
+  pointer-events:none;z-index:0;
+}
+
+/* Req-row hover glow */
+.req-row{
+  transition:background .25s,border-color .25s,transform .25s var(--ease);
+  cursor:default;
+}
+.req-row:hover{
+  background:rgba(38,120,151,.08);
+  border-left-width:4px;
+  transform:translateX(4px);
+}
+
+/* Team card hover */
+.team-card{transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+.team-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 12px 32px rgba(38,120,151,.14);
+}
+
+/* Timeline dot pulse */
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(38,120,151,.15)}50%{box-shadow:0 0 0 6px rgba(38,120,151,.08)}}
+.tl-dot{animation:pulse 2.4s ease-in-out infinite}
+
+/* ── END FUTURISTIC ENHANCEMENTS ──────────────────────────────── */
 
 /* Small mobile — 480px */
 @media(max-width:480px){
@@ -811,15 +981,16 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hid
   .app-sp-title{font-size:20px}
   .app-sp-desc{font-size:13px}
   .team-cards{flex-direction:column;align-items:center}
-  .comp-3d-zone{height:33vh}
+  .comp-3d-zone{height:50vh}
   #section-pcb .split{flex-direction:column}
-  #section-pcb .split-l{min-height:160px}
+  #section-pcb .split-l{min-height:45vh}
   .thanks{font-size:32px}
 }
 </style>
 </head>
 <body>
 
+<div id="scroll-progress"></div>
 <canvas id="bg-canvas"></canvas>
 <div class="nav-logo" id="nav-logo">ThermoGo</div>
 
@@ -877,7 +1048,7 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hid
           </div>
         </div>
       </div>
-      <div class="split-r" id="problem-3d-zone" style="min-height:300px"></div>
+      <div class="split-r" id="problem-3d-zone" style="min-height:340px"></div>
     </div>
   </div>
 </section>
@@ -941,7 +1112,7 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hid
           <span class="pill">AI insights</span>
         </div>
       </div>
-      <div class="split-r" id="solution-3d-zone" style="min-height:300px"></div>
+      <div class="split-r" id="solution-3d-zone" style="min-height:340px"></div>
     </div>
   </div>
 </section>
@@ -1820,11 +1991,13 @@ ScrollTrigger.create({
   onUpdate(self) {
     const p = self.progress;
     heroSpin = p < 0.08;
-    gsap.set('#hero-inner', { opacity: Math.max(0, 1 - p*3), y: -p*35 });
-    gsap.set('#scroll-hint', { opacity: Math.max(0, 1 - p*6) });
+    gsap.set('#hero-inner', { opacity: Math.max(0, 1 - p*2.8), y: -p*45, scale: 1 - p*0.04 });
+    gsap.set('#scroll-hint', { opacity: Math.max(0, 1 - p*7) });
     completeGroup.position.x = p * m(2.3, 0);
     completeGroup.position.z = -p * 0.8;
     completeGroup.scale.setScalar(m(1.0, 0.58) - p * 0.12);
+    // Subtle camera drift inward during hero scroll-out
+    camera.position.z = 5.5 - p * 0.35;
   }
 });
 
@@ -1842,11 +2015,14 @@ ScrollTrigger.create({
     showDevice(false);
     compMeshes.forEach(c => { if(c) c.visible = false; });
     pMat.opacity = 0;
-    moveCam(0, 0.6, 5.5, 1.0);
-    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:1.0, overwrite:'auto' });
-    gsap.to(completeGroup.position, { x:m(2.3,0), y:m(0,1.2), z:0.2, duration:1.1, ease:'power3.inOut', overwrite:'auto' });
+    moveCam(0, m(0.6,1.0), 5.5, 1.0);
+    gsap.to(cameraTarget, { x:0, y:m(0,1.0), z:0, duration:1.0, overwrite:'auto' });
+    gsap.to(completeGroup.position, { x:m(2.3,0), y:m(0,2.0), z:0.2, duration:1.1, ease:'power3.inOut', overwrite:'auto' });
     gsap.to(completeGroup.scale,    { x:m(.88,.48), y:m(.88,.48), z:m(.88,.48), duration:1.1, ease:'power3.inOut', overwrite:'auto' });
-    gsap.fromTo('.stat-card', {opacity:0,y:18}, {opacity:1,y:0,duration:.6,stagger:.12,ease:'power2.out'});
+    gsap.fromTo('.stat-card', {opacity:0,y:18}, {opacity:1,y:0,duration:.7,stagger:.14,ease:'power3.out'});
+  },
+  onLeave() {
+    gsap.to('.stat-card', {opacity:0, y:-12, duration:.35, stagger:.06, ease:'power2.in'});
   },
   onEnterBack() {
     phase = 'problem';
@@ -1854,9 +2030,9 @@ ScrollTrigger.create({
     showComplete(true);
     showDevice(false);
     compMeshes.forEach(c => { if(c) c.visible = false; });
-    moveCam(0, 0.6, 5.5, 0.8);
-    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:0.8, overwrite:'auto' });
-    gsap.to(completeGroup.position, { x:m(2.3,0), y:m(0,1.2), z:0.2, duration:0.8, ease:'power3.inOut', overwrite:'auto' });
+    moveCam(0, m(0.6,1.0), 5.5, 0.8);
+    gsap.to(cameraTarget, { x:0, y:m(0,1.0), z:0, duration:0.8, overwrite:'auto' });
+    gsap.to(completeGroup.position, { x:m(2.3,0), y:m(0,2.0), z:0.2, duration:0.8, ease:'power3.inOut', overwrite:'auto' });
     gsap.to(completeGroup.scale,    { x:m(.88,.48), y:m(.88,.48), z:m(.88,.48), duration:0.8, ease:'power3.inOut', overwrite:'auto' });
   }
 });
@@ -1879,7 +2055,10 @@ ScrollTrigger.create({
     // Left side below title — device moves from right (problem) to left (requirements)
     gsap.to(completeGroup.position, { x:m(-2.2,0), y:m(-0.5,0.3), z:0, duration:1.1, ease:'power3.inOut', overwrite:'auto' });
     gsap.to(completeGroup.scale,    { x:m(.78,0), y:m(.78,0), z:m(.78,0), duration:1.1, ease:'power3.inOut', overwrite:'auto' });
-    gsap.fromTo('.req-row', {opacity:0,x:-16}, {opacity:1,x:0,duration:.55,stagger:.08,ease:'power2.out'});
+    gsap.fromTo('.req-row', {opacity:0,x:-20}, {opacity:1,x:0,duration:.6,stagger:.07,ease:'power3.out'});
+  },
+  onLeave() {
+    gsap.to('.req-row', {opacity:0, x:20, duration:.3, stagger:.04, ease:'power2.in'});
   },
   onEnterBack() {
     phase = 'requirements';
@@ -1907,9 +2086,9 @@ ScrollTrigger.create({
     showComplete(true);
     showDevice(false);
     compMeshes.forEach(c => { if(c) c.visible = false; });
-    moveCam(0, 0.6, 5.5, 1.0);
-    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:1.0, overwrite:'auto' });
-    gsap.to(completeGroup.position, { x:m(2.3,0), y:m(0,1.2), z:0.2, duration:1.1, ease:'power3.inOut', overwrite:'auto' });
+    moveCam(0, m(0.6,1.0), 5.5, 1.0);
+    gsap.to(cameraTarget, { x:0, y:m(0,1.0), z:0, duration:1.0, overwrite:'auto' });
+    gsap.to(completeGroup.position, { x:m(2.3,0), y:m(0,2.0), z:0.2, duration:1.1, ease:'power3.inOut', overwrite:'auto' });
     gsap.to(completeGroup.scale,    { x:m(.88,.48), y:m(.88,.48), z:m(.88,.48), duration:1.1, ease:'power3.inOut', overwrite:'auto' });
     gsap.fromTo('.pill', {opacity:0,scale:0.8}, {opacity:1,scale:1,duration:.5,stagger:.07,ease:'back.out(1.4)'});
   },
@@ -1919,9 +2098,9 @@ ScrollTrigger.create({
     showComplete(true);
     showDevice(false);
     compMeshes.forEach(c => { if(c) c.visible = false; });
-    moveCam(0, 0.6, 5.5, 0.8);
-    gsap.to(cameraTarget, { x:0, y:0, z:0, duration:0.8, overwrite:'auto' });
-    gsap.to(completeGroup.position, { x:m(2.3,0), y:m(0,1.2), z:0.2, duration:0.8, ease:'power3.inOut', overwrite:'auto' });
+    moveCam(0, m(0.6,1.0), 5.5, 0.8);
+    gsap.to(cameraTarget, { x:0, y:m(0,1.0), z:0, duration:0.8, overwrite:'auto' });
+    gsap.to(completeGroup.position, { x:m(2.3,0), y:m(0,2.0), z:0.2, duration:0.8, ease:'power3.inOut', overwrite:'auto' });
     gsap.to(completeGroup.scale,    { x:m(.88,.48), y:m(.88,.48), z:m(.88,.48), duration:0.8, ease:'power3.inOut', overwrite:'auto' });
   },
   onLeave() {
@@ -1945,7 +2124,10 @@ ScrollTrigger.create({
     showComplete(false);
     showDevice(false);
     compMeshes.forEach(c => { if(c) c.visible = false; });
-    gsap.fromTo('.user-card', {opacity:0,y:20}, {opacity:1,y:0,duration:.6,stagger:.14,ease:'power2.out'});
+    gsap.fromTo('.user-card', {opacity:0,y:28,scale:.96}, {opacity:1,y:0,scale:1,duration:.7,stagger:.14,ease:'power3.out'});
+  },
+  onLeave() {
+    gsap.to('.user-card', {opacity:0, y:-16, duration:.4, stagger:.08, ease:'power2.in'});
   },
   onEnterBack() {
     phase = 'users';
@@ -1969,10 +2151,20 @@ ScrollTrigger.create({
     showComplete(false);
     showDevice(false);
     compMeshes.forEach(c => { if(c) c.visible = false; });
-    gsap.fromTo(['.arch-node','.arch-arrow'],
-      {opacity:0, scale:0.85},
-      {opacity:1, scale:1, duration:.5, stagger:.1, ease:'power2.out'}
+    gsap.fromTo('.arch-node',
+      {opacity:0, scale:0.8, y:14},
+      {opacity:1, scale:1, y:0, duration:.65, stagger:.14, ease:'back.out(1.3)'}
     );
+    gsap.fromTo('.arch-arrow',
+      {opacity:0},
+      {opacity:1, duration:.4, stagger:.14, delay:.18, ease:'power2.out'}
+    );
+  },
+  onLeave() {
+    gsap.to(['.arch-node','.arch-arrow'], {opacity:0, scale:.9, duration:.35, stagger:.05, ease:'power2.in'});
+  },
+  onLeaveBack() {
+    gsap.to(['.arch-node','.arch-arrow'], {opacity:0, duration:.3, ease:'power2.in'});
   },
   onEnterBack() {
     phase = 'arch';
@@ -1997,9 +2189,15 @@ ScrollTrigger.create({
     showComplete(false);
     compMeshes.forEach(c => { if(c) c.visible = false; });
     gsap.fromTo('.tech-card',
-      {opacity:0, y:18},
-      {opacity:1, y:0, duration:.5, stagger:.06, ease:'power2.out'}
+      {opacity:0, y:22, scale:.95},
+      {opacity:1, y:0, scale:1, duration:.6, stagger:.07, ease:'power3.out'}
     );
+  },
+  onLeave() {
+    gsap.to('.tech-card', {opacity:0, y:-14, duration:.35, stagger:.04, ease:'power2.in'});
+  },
+  onLeaveBack() {
+    gsap.to('.tech-card', {opacity:0, duration:.3, ease:'power2.in'});
   },
   onEnterBack() {
     phase = 'tech';
@@ -2119,7 +2317,7 @@ function switchComp(idx) {
   compMeshes[idx] && (compMeshes[idx].visible = true);
   if (compMeshes[idx]) {
     compMeshes[idx].rotation.set(0, 0, 0);
-    compMeshes[idx].position.set(m(-1.8, 0), m(0, 0.9), 0);
+    compMeshes[idx].position.set(m(-1.8, 0), m(0, 1.5), 0);
     compMeshes[idx].scale.setScalar(m(1.0, 0.65));
   }
 
@@ -2166,7 +2364,7 @@ ScrollTrigger.create({
     currentComp = -1;
     switchComp(0);
     if (compMeshes[0]) {
-      compMeshes[0].position.set(m(-1.8,0), m(0,0.9), 0);
+      compMeshes[0].position.set(m(-1.8,0), m(0,1.5), 0);
       compMeshes[0].scale.setScalar(m(1.0, 0.65));
     }
   },
@@ -2196,11 +2394,11 @@ ScrollTrigger.create({
     compMeshes.forEach(c => { if(c) c.visible = false; });
     showCoverBox(false);
     showPCB(true);
-    moveCam(0, 0.6, 5.5, 1.2);
-    gsap.to(cameraTarget, { x:0, y:m(0, 0.6), z:0, duration:1.2, overwrite:'auto' });
+    moveCam(0, m(0.6, 1.8), 5.5, 1.2);
+    gsap.to(cameraTarget, { x:0, y:m(0, 1.8), z:0, duration:1.2, overwrite:'auto' });
     pcbGroup.scale.setScalar(m(1.8, 0.95));
     pcbGroup.rotation.set(0, 0, 0);
-    pcbGroup.position.set(m(-2.3, 0), m(0, 1.0), 0);
+    pcbGroup.position.set(m(-2.3, 0), m(0, 2.5), 0);
   },
   onEnterBack() {
     phase = 'pcb';
@@ -2208,16 +2406,16 @@ ScrollTrigger.create({
     compMeshes.forEach(c => { if(c) c.visible = false; });
     showCoverBox(false);
     showPCB(true);
-    moveCam(0, 0.6, 5.5, 0.9);
-    gsap.to(cameraTarget, { x:0, y:m(0, 0.6), z:0, duration:0.9, overwrite:'auto' });
+    moveCam(0, m(0.6, 1.8), 5.5, 0.9);
+    gsap.to(cameraTarget, { x:0, y:m(0, 1.8), z:0, duration:0.9, overwrite:'auto' });
     pcbGroup.scale.setScalar(m(1.8, 0.95));
-    pcbGroup.position.set(m(-2.3, 0), m(0, 1.0), 0);
+    pcbGroup.position.set(m(-2.3, 0), m(0, 2.5), 0);
   },
   onUpdate(self) {
     const p = self.progress;
     pcbGroup.rotation.y = p * Math.PI;
     pcbGroup.rotation.x = Math.sin(p * Math.PI) * 0.18;
-    pcbGroup.position.set(m(-2.3, 0), m(0, 1.0), 0);
+    pcbGroup.position.set(m(-2.3, 0), m(0, 2.5), 0);
   },
   onLeave() {
     gsap.to(pcbGroup.scale, { x:0, y:0, z:0, duration:0.6, ease:'power2.in', overwrite:'auto',
@@ -2323,9 +2521,12 @@ ScrollTrigger.create({
     showDevice(false);
     compMeshes.forEach(c => { if(c) c.visible = false; });
     gsap.fromTo('.tl-item',
-      {opacity:0, y:18},
-      {opacity:1, y:0, duration:.6, stagger:.14, ease:'power2.out'}
+      {opacity:0, y:24, scale:.97},
+      {opacity:1, y:0, scale:1, duration:.65, stagger:.18, ease:'power3.out'}
     );
+  },
+  onLeave() {
+    gsap.to('.tl-item', {opacity:0, y:-12, duration:.35, stagger:.07, ease:'power2.in'});
   },
   onEnterBack() {
     phase = 'next';
@@ -2351,13 +2552,16 @@ ScrollTrigger.create({
     heroSpin = false;
     showDevice(false);
     compMeshes.forEach(c => { if(c) c.visible = false; });
-    gsap.to(pMat, {opacity:.45, duration:1.4, ease:'power2.out'});
+    gsap.to(pMat, {opacity:.45, duration:1.6, ease:'power2.out'});
     gsap.fromTo('.team-card',
-      {opacity:0, y:18},
-      {opacity:1, y:0, duration:.65, stagger:.12, ease:'power2.out'}
+      {opacity:0, y:24, scale:.93},
+      {opacity:1, y:0, scale:1, duration:.75, stagger:.13, ease:'back.out(1.2)'}
     );
-    gsap.to('#thanks',    {opacity:1, duration:.9, delay:.5, ease:'power2.out'});
-    gsap.to('#final-cap', {opacity:1, duration:.9, delay:.8, ease:'power2.out'});
+    gsap.fromTo('#thanks',
+      {opacity:0, y:30, letterSpacing:'-.06em'},
+      {opacity:1, y:0, letterSpacing:'-.03em', duration:1.1, delay:.55, ease:'power3.out'}
+    );
+    gsap.to('#final-cap', {opacity:1, duration:.9, delay:1.0, ease:'power2.out'});
   },
   onEnterBack() {
     phase = 'team';
@@ -2370,6 +2574,14 @@ ScrollTrigger.create({
     gsap.to(pMat, {opacity:0, duration:.6});
   }
 });
+
+// ── Scroll progress bar ──────────────────────────────────────────
+const progressEl = document.getElementById('scroll-progress');
+window.addEventListener('scroll', () => {
+  const max = document.body.scrollHeight - window.innerHeight;
+  if (max <= 0) return;
+  progressEl.style.width = (window.pageYOffset / max * 100) + '%';
+}, { passive: true });
 
 // ── Kick off ─────────────────────────────────────────────────────
 ScrollTrigger.refresh();
