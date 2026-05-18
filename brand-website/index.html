@@ -516,21 +516,30 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hid
 }
 
 /* ── VIDEO ───────────────────────────────────────────────────────── */
-.vid-outer{max-width:780px;margin:0 auto;width:100%}
+#section-video{flex-direction:column;gap:0;justify-content:center}
+.vid-outer{max-width:860px;margin:0 auto;width:100%}
 
 .vid-wrap{
-  background:#1c1c1e;border-radius:12px;overflow:hidden;
-  box-shadow:0 40px 80px rgba(0,0,0,.2),var(--glow);
+  background:#111214;border-radius:14px;overflow:hidden;
+  box-shadow:0 48px 96px rgba(0,0,0,.28),0 0 0 1px rgba(38,120,151,.18),
+    0 0 48px rgba(38,120,151,.08);
+  transition:box-shadow .4s;
+}
+.vid-wrap:hover{
+  box-shadow:0 48px 96px rgba(0,0,0,.32),0 0 0 1px rgba(38,120,151,.3),
+    0 0 64px rgba(38,120,151,.14);
 }
 
 .vid-chrome{
-  background:#2c2c2e;padding:.7rem 1rem;
-  display:flex;align-items:center;gap:.8rem;
+  background:#1e2024;padding:.65rem 1rem;
+  display:flex;align-items:center;gap:.75rem;
+  border-bottom:1px solid rgba(255,255,255,.06);
 }
 
 .vid-title-bar{
   flex:1;text-align:center;font-size:11px;
-  color:rgba(255,255,255,.25);font-family:monospace;
+  color:rgba(255,255,255,.28);font-family:monospace;
+  letter-spacing:.06em;
 }
 
 .vid-screen{
@@ -539,25 +548,43 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hid
   position:relative;overflow:hidden;
 }
 
-.vid-screen video{width:100%;height:100%;object-fit:contain}
+.vid-screen video{
+  width:100%;height:100%;
+  object-fit:contain;
+  display:block;
+}
 
 .vid-placeholder{
-  display:flex;flex-direction:column;
-  align-items:center;gap:1rem;
+  position:absolute;inset:0;
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:1rem;
+  background:rgba(0,0,0,.72);
 }
 
 .play-btn{
-  width:60px;height:60px;border-radius:50%;
-  background:rgba(38,120,151,.75);
+  width:64px;height:64px;border-radius:50%;
+  background:rgba(38,120,151,.85);
+  border:2px solid rgba(38,120,151,.5);
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;
+  box-shadow:0 0 32px rgba(38,120,151,.4);
+  transition:transform .2s,background .2s,box-shadow .2s;
 }
-.play-btn svg{pointer-events:none;margin-left:2px}
+.play-btn:hover{
+  transform:scale(1.08);
+  background:rgba(38,120,151,1);
+  box-shadow:0 0 48px rgba(38,120,151,.6);
+}
+.play-btn svg{pointer-events:none;margin-left:3px}
 
 .vid-ph-text{
-  font-size:12px;color:rgba(255,255,255,.25);
+  font-size:12px;color:rgba(255,255,255,.35);
   letter-spacing:.08em;text-align:center;padding:0 2rem;
 }
+
+/* Video section header centering */
+#section-video .label{justify-content:center}
+#section-video .sec-title{text-align:center;margin-bottom:1.75rem}
 
 /* ── TIMELINE ────────────────────────────────────────────────────── */
 .timeline-wrap{
@@ -784,8 +811,14 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hid
   .final-cap{font-size:11px}
 
   /* Video */
-  .vid-outer{max-width:100%}
-  .play-btn{width:48px;height:48px}
+  .vid-outer{max-width:100%;border-radius:10px}
+  .vid-wrap{border-radius:10px}
+  .vid-chrome{padding:.4rem .7rem}
+  .vid-title-bar{font-size:9px}
+  .tl{width:9px;height:9px}
+  .play-btn{width:50px;height:50px}
+  #section-video .sec-title{font-size:22px;margin-bottom:1.25rem}
+  #section-video .container{padding:0 1rem}
 }
 
 /* Mobile 3D layout fixes */
@@ -1484,11 +1517,11 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hid
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <!--  12. DEMO VIDEO                                                -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
-<section id="section-video" class="section" style="background:rgba(248,249,251,.9)">
+<section id="section-video" class="section" style="background:rgba(14,18,23,.96)">
   <div class="container">
-    <p class="label" style="text-align:center">In Action</p>
-    <h2 class="sec-title" style="text-align:center;margin-bottom:2rem">See It In Action</h2>
-    <div class="vid-outer" id="vid-outer" style="opacity:0;transform:scale(.92)">
+    <p class="label" style="color:rgba(38,120,151,.9)">In Action</p>
+    <h2 class="sec-title" style="color:#fff">See It In Action</h2>
+    <div class="vid-outer" id="vid-outer" style="opacity:0;transform:scale(.94) translateY(18px)">
       <div class="vid-wrap">
         <div class="vid-chrome">
           <div class="tls">
@@ -1499,10 +1532,18 @@ body{font-family:'Inter',sans-serif;background:#fff;color:#0E1217;overflow-x:hid
           <div class="vid-title-bar">ThermoGo — Full System Walkthrough Demo</div>
         </div>
         <div class="vid-screen">
-          <video controls src="demo.mp4" id="demo-video" style="display:none"></video>
+          <video
+            id="demo-video"
+            src="ThermoGo-Demo.mp4"
+            controls
+            playsinline
+            preload="metadata"
+          ></video>
           <div class="vid-placeholder" id="vid-placeholder">
-            <div class="play-btn"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="white"><polygon points="6,3 20,12 6,21"/></svg></div>
-            <div class="vid-ph-text">Drop <strong>demo.mp4</strong> in this folder to enable playback</div>
+            <div class="play-btn" id="play-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white"><polygon points="6,3 20,12 6,21"/></svg>
+            </div>
+            <div class="vid-ph-text">Video unavailable</div>
           </div>
         </div>
       </div>
@@ -1564,10 +1605,10 @@ gsap.registerPlugin(ScrollTrigger);
 const demoVid = document.getElementById('demo-video');
 const vidPH   = document.getElementById('vid-placeholder');
 if (demoVid) {
-  fetch('demo.mp4',{method:'HEAD'})
-    .then(r => { if(r.ok){ demoVid.style.display='block'; vidPH.style.display='none'; } })
-    .catch(()=>{});
-  demoVid.addEventListener('error', () => { demoVid.style.display='none'; vidPH.style.display='flex'; });
+  demoVid.addEventListener('error', () => {
+    demoVid.style.display = 'none';
+    if (vidPH) vidPH.style.display = 'flex';
+  });
 }
 
 // ── Renderer ──────────────────────────────────────────────────────
