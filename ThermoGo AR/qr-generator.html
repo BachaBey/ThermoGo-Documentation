@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThermoGo — QR Code Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000D1A;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      color: #E0F7FA;
+    }
+    .card {
+      background: #001824;
+      border: 1px solid rgba(0,188,212,0.25);
+      border-radius: 20px;
+      padding: 40px 44px;
+      max-width: 480px; width: 92%;
+      text-align: center;
+    }
+    .logo { font-size: 30px; font-weight: 900; color: #00BCD4; letter-spacing: 2px; margin-bottom: 4px; }
+    .sub  { font-size: 12px; color: #80DEEA; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 28px; }
+
+    label { display: block; text-align: left; font-size: 12px; color: #80DEEA; margin-bottom: 6px; letter-spacing: 1px; }
+    input {
+      width: 100%;
+      background: rgba(0,188,212,0.07);
+      border: 1px solid rgba(0,188,212,0.3);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 14px; color: #E0F7FA;
+      outline: none;
+      margin-bottom: 18px;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #00BCD4; }
+
+    button {
+      width: 100%;
+      background: linear-gradient(135deg, #006064, #00BCD4);
+      color: #fff;
+      border: none; border-radius: 10px;
+      padding: 13px;
+      font-size: 14px; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.5px;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.88; }
+
+    #qr-wrap {
+      margin-top: 28px;
+      display: none;
+    }
+    #qr-wrap.visible { display: block; }
+
+    #qr-canvas {
+      display: block; margin: 0 auto 16px;
+      border-radius: 12px;
+      border: 4px solid rgba(0,188,212,0.2);
+    }
+
+    .qr-hint {
+      font-size: 12px; color: #80DEEA; margin-bottom: 14px;
+      line-height: 1.6;
+    }
+
+    .dl-btn {
+      display: inline-block;
+      background: rgba(0,188,212,0.12);
+      border: 1px solid rgba(0,188,212,0.4);
+      color: #00BCD4;
+      padding: 9px 22px;
+      border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.2s;
+    }
+    .dl-btn:hover { background: rgba(0,188,212,0.22); }
+
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(0,188,212,0.1);
+      margin: 28px 0;
+    }
+    .step { text-align: left; font-size: 12px; color: #80DEEA; line-height: 2; }
+    .step strong { color: #00BCD4; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">ThermoGo</div>
+  <div class="sub">AR Experience — QR Generator</div>
+
+  <label>Paste your Netlify / hosted URL here:</label>
+  <input type="url" id="url-input"
+    placeholder="https://thermogo-ar.netlify.app"
+    value="">
+
+  <button onclick="generate()">Generate QR Code</button>
+
+  <div id="qr-wrap">
+    <canvas id="qr-canvas"></canvas>
+    <p class="qr-hint">
+      Print or display this QR code on your poster.<br>
+      Scanning it opens the AR experience directly in the phone browser.
+    </p>
+    <a id="dl-link" class="dl-btn" download="ThermoGo-AR-QR.png">Download PNG</a>
+  </div>
+
+  <hr class="divider">
+
+  <div class="step">
+    <strong>How to use:</strong><br>
+    1. Deploy your project folder to <strong>netlify.com/drop</strong><br>
+    2. Copy the URL Netlify gives you<br>
+    3. Paste it above and click Generate<br>
+    4. Download the QR and add it to your poster
+  </div>
+</div>
+
+<script>
+function generate() {
+  const url   = document.getElementById('url-input').value.trim();
+  const wrap  = document.getElementById('qr-wrap');
+  const canvas = document.getElementById('qr-canvas');
+  const dlLink = document.getElementById('dl-link');
+
+  if (!url) { alert('Please enter a URL first.'); return; }
+
+  QRCode.toCanvas(canvas, url, {
+    width: 220,
+    margin: 2,
+    color: {
+      dark:  '#003344',
+      light: '#E0F7FA'
+    }
+  }, (err) => {
+    if (err) { alert('QR generation failed: ' + err); return; }
+    wrap.classList.add('visible');
+    dlLink.href = canvas.toDataURL('image/png');
+  });
+}
+
+// Auto-generate if URL already in input on load
+window.addEventListener('load', () => {
+  const input = document.getElementById('url-input');
+  if (input.value) generate();
+});
+</script>
+</body>
+</html>

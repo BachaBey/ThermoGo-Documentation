@@ -1,0 +1,12 @@
+{
+  "name": "thermogo-ar",
+  "version": "1.0.0",
+  "description": "ThermoGo AR Experience — MindAR image-target compiler",
+  "scripts": {
+    "compile": "node compile-target.js"
+  },
+  "dependencies": {
+    "mind-ar": "^1.2.5",
+    "canvas": "^2.11.2"
+  }
+}

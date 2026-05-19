@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- iOS Safari: allow fullscreen camera, hide browser chrome -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>ThermoGo AR</title>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+      background: #000;
+    }
+
+    /* ── Force the A-Frame canvas to fill screen ── */
+    a-scene {
+      position: fixed !important;
+      top: 0 !important; left: 0 !important;
+      width: 100vw !important; height: 100vh !important;
+      z-index: 1;
+    }
+    /* MindAR injects a <video> and a <canvas> — both must be full-screen */
+    a-scene canvas,
+    #mindar-video-container,
+    #mindar-video-container video {
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+    }
+
+    /* ── Tap-to-Start overlay ── */
+    #start-screen {
+      position: fixed; inset: 0;
+      background: #000D1A;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 2000;
+      transition: opacity 0.6s ease;
+    }
+    #start-screen.hidden { opacity: 0; pointer-events: none; }
+
+    .ss-logo {
+      font-size: 42px; font-weight: 900;
+      color: #00BCD4; letter-spacing: 3px;
+      margin-bottom: 6px;
+      text-shadow: 0 0 30px rgba(0,188,212,0.6);
+    }
+    .ss-tagline {
+      font-size: 12px; color: #80DEEA;
+      letter-spacing: 2px; text-transform: uppercase;
+      margin-bottom: 52px;
+    }
+    .ss-icon {
+      font-size: 52px; margin-bottom: 24px;
+      animation: float 2.4s ease-in-out infinite;
+    }
+    #start-btn {
+      background: linear-gradient(135deg, #006064, #00BCD4);
+      color: #fff; border: none; border-radius: 50px;
+      padding: 16px 42px;
+      font-size: 16px; font-weight: 700; letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 0 28px rgba(0,188,212,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    #start-btn:active  { transform: scale(0.96); box-shadow: 0 0 14px rgba(0,188,212,0.3); }
+    #start-btn:disabled {
+      background: linear-gradient(135deg, #1a3a3a, #2a5a5a);
+      opacity: 0.6; cursor: not-allowed; box-shadow: none;
+      animation: disabled-pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes disabled-pulse {
+      0%,100% { opacity: 0.5; } 50% { opacity: 0.75; }
+    }
+    .ss-note {
+      margin-top: 18px; font-size: 11px;
+      color: rgba(128,222,234,0.55); letter-spacing: 0.5px;
+      text-align: center; max-width: 260px; line-height: 1.6;
+    }
+
+    /* ── Loading indicator (shown after tap while camera warms up) ── */
+    #loading-bar-wrap {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 3px; z-index: 1500;
+      display: none;
+    }
+    #loading-bar-wrap.visible { display: block; }
+    #loading-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #006064, #00BCD4, #40C4FF);
+      animation: bar-fill 4s ease-in-out forwards;
+    }
+
+    /* ── Corner Badge ── */
+    #corner-badge {
+      position: fixed; top: 18px; left: 18px;
+      background: rgba(0,18,30,0.80);
+      border: 1px solid rgba(0,188,212,0.35);
+      border-radius: 12px; padding: 8px 14px;
+      backdrop-filter: blur(12px);
+      pointer-events: none; z-index: 100;
+      opacity: 0; transition: opacity 0.5s ease;
+    }
+    #corner-badge.visible { opacity: 1; }
+    .cb-name { font-size: 13px; font-weight: 700; color: #00BCD4; }
+    .cb-dot  {
+      display: inline-block; width: 7px; height: 7px;
+      border-radius: 50%; background: #1DE9B6;
+      margin-right: 5px;
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    .cb-live { font-size: 10px; color: #80DEEA; }
+
+    /* ── Scan Hint ── */
+    #scan-hint {
+      position: fixed; bottom: 44px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,188,212,0.88);
+      color: #fff; padding: 11px 22px;
+      border-radius: 24px; font-size: 13px; font-weight: 600;
+      letter-spacing: 0.4px; pointer-events: none; z-index: 100;
+      white-space: nowrap;
+      display: none;
+      animation: hint-pulse 2.2s ease-in-out infinite;
+    }
+    #scan-hint.visible { display: block; }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-10px); }
+    }
+    @keyframes bar-fill {
+      0%   { width: 0%; }
+      50%  { width: 70%; }
+      85%  { width: 92%; }
+      100% { width: 100%; }
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+    }
+    @keyframes hint-pulse {
+      0%,100% { transform: translateX(-50%) scale(1); opacity: 1; }
+      50%      { transform: translateX(-50%) scale(0.97); opacity: 0.75; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     TAP-TO-START  (required by iOS/Android
+     to grant camera access)
+════════════════════════════════════════ -->
+<div id="start-screen">
+  <div class="ss-logo">ThermoGo</div>
+  <div class="ss-tagline">Smart Monitoring · Safe Medicines</div>
+  <div class="ss-icon">📷</div>
+  <button id="start-btn" onclick="startAR()" disabled>Preparing AR…</button>
+  <p class="ss-note" id="ss-note">Initialising — please wait a moment…</p>
+  <p id="safari-hint" style="display:none; margin-top:14px; font-size:11px;
+     color:#FF8A65; max-width:270px; text-align:center; line-height:1.7;">
+    ⚠️ Must be opened in <strong>Safari</strong> on iPhone.<br>
+    Copy the URL and paste it into Safari if you arrived from another app.
+  </p>
+</div>
+
+<!-- Progress bar (visible while camera warms up) -->
+<div id="loading-bar-wrap"><div id="loading-bar"></div></div>
+
+<!-- Error display -->
+<div id="error-box" style="display:none; position:fixed; bottom:80px; left:50%;
+     transform:translateX(-50%); background:rgba(180,30,30,0.92);
+     color:#fff; padding:12px 20px; border-radius:12px; font-size:12px;
+     max-width:300px; text-align:center; z-index:500; line-height:1.6;">
+</div>
+
+<!-- ════════════════════════════════════════
+     HUD
+════════════════════════════════════════ -->
+<div id="corner-badge">
+  <div class="cb-name">ThermoGo AR</div>
+  <div class="cb-live"><span class="cb-dot"></span>Live Experience</div>
+</div>
+<div id="scan-hint">📷 Point camera at the ThermoGo poster</div>
+
+
+<!-- ════════════════════════════════════════
+     A-FRAME  +  MINDAR SCENE
+     NOTE: no "embedded" — scene must fill
+     the full viewport for camera to show
+════════════════════════════════════════ -->
+<a-scene
+  mindar-image="imageTargetSrc: ./targets/poster.mind;
+                autoStart: false;
+                uiLoading: no; uiError: no; uiScanning: no;
+                filterMinCF: 0.001; filterBeta: 0.01"
+  color-space="sRGB"
+  renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
+
+  <!-- ── Lighting ── -->
+  <a-light type="ambient"     color="#E0F7FA" intensity="0.7"></a-light>
+  <a-light type="directional" position="2 4 3" color="#ffffff" intensity="0.9"></a-light>
+  <a-light type="point"       position="0 1 2" color="#00BCD4" intensity="0.35" distance="5"></a-light>
+
+  <!-- ── Camera ── -->
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+
+  <!-- ══════════════════════════════════════
+       ALL AR CONTENT — anchored to poster
+  ══════════════════════════════════════ -->
+  <a-entity mindar-image-target="targetIndex: 0" id="ar-root">
+
+    <!-- 0. Subtle overlay -->
+    <a-plane position="0 0 -0.002" width="1.0" height="1.41"
+      material="color: #000C18; opacity: 0.22; transparent: true; side: double">
+    </a-plane>
+
+    <!-- ─────────────────────────────────── -->
+    <!-- 1. TITLE CARD  (top-centre)         -->
+    <!-- ─────────────────────────────────── -->
+    <a-entity id="title-card" position="0 0.60 0.015"
+      animation__enter="property: position; from: 0 0.85 0.015; to: 0 0.60 0.015;
+                        dur: 700; easing: easeOutBack; delay: 300">
+      <a-plane width="0.75" height="0.155"
+        material="color: #00474F; opacity: 0.94; transparent: true; side: double">
+      </a-plane>
+      <a-plane position="0 0.079 0.001" width="0.75" height="0.005"
+        material="color: #00BCD4; opacity: 1; side: double">
+      </a-plane>
+      <a-text value="ThermoGo" align="center" color="#FFFFFF"
+        width="2.2" position="0 0.030 0.008"
+        animation__fade="property: opacity; from: 0; to: 1; dur: 500; delay: 800">
+      </a-text>
+      <a-text value="Smart Monitoring. Safe Medicines." align="center" color="#B2EBF2"
+        width="1.65" position="0 -0.033 0.008" scale="0.68 0.68 0.68"
+        animation__fade="property: opacity; from: 0; to: 1; dur: 500; delay: 1000">
+      </a-text>
+    </a-entity>
+
+    <!-- ─────────────────────────────────── -->
+    <!-- 2. 3-D DEVICE  (top-right)          -->
+    <!-- ─────────────────────────────────── -->
+    <a-entity id="device-group" position="0.30 0.22 0.10"
+      animation__popin="property: scale; from: 0.01 0.01 0.01; to: 1 1 1;
+                        dur: 850; easing: easeOutElastic; delay: 550"
+      animation__spin="property: rotation; from: 0 -20 0; to: 0 340 0;
+                       dur: 10000; loop: true; easing: linear">
+      <a-box width="0.22" height="0.135" depth="0.062"
+        material="color: #F4F4F4; roughness: 0.25; metalness: 0.08" shadow="cast:true">
+      </a-box>
+      <a-plane position="0 0.069 0" width="0.22" height="0.018"
+        material="color: #00BCD4; opacity: 1; side: double">
+      </a-plane>
+      <a-plane position="0 -0.018 0.032" width="0.165" height="0.072"
+        material="color: #000D1A; emissive: #001F3F; emissiveIntensity: 0.55; side: double">
+      </a-plane>
+      <a-text id="dev-temp" value="23.4C" align="center" color="#00FF7F"
+        width="0.55" position="0 -0.003 0.034" scale="0.26 0.26 0.26">
+      </a-text>
+      <a-text id="dev-hum" value="48%" align="center" color="#40C4FF"
+        width="0.48" position="0 -0.038 0.034" scale="0.23 0.23 0.23">
+      </a-text>
+      <a-sphere id="led" position="0.088 0.055 0.032" radius="0.009"
+        material="color: #00FF7F; emissive: #00FF7F; emissiveIntensity: 1"
+        animation__blink="property: material.emissiveIntensity; from: 0.2; to: 1;
+                          dur: 900; loop: true; dir: alternate">
+      </a-sphere>
+      <a-cylinder position="-0.084 0.09 0" radius="0.003" height="0.055"
+        material="color: #BBBBBB">
+      </a-cylinder>
+    </a-entity>
+
+    <a-text value="ESP32  ·  BME280" align="center" color="#80DEEA"
+      width="1.05" position="0.30 0.075 0.05" scale="0.75 0.75 0.75"
+      animation__fade="property: opacity; from: 0; to: 0.9; dur: 600; delay: 1400">
+    </a-text>
+
+    <!-- ─────────────────────────────────── -->
+    <!-- 3. LIVE READINGS PANEL  (top-left)  -->
+    <!-- ─────────────────────────────────── -->
+    <a-entity id="sensor-panel" position="-0.315 0.22 0.015"
+      animation__popin="property: scale; from: 0.01 0.01 0.01; to: 1 1 1;
+                        dur: 700; easing: easeOutBack; delay: 800">
+      <a-plane width="0.42" height="0.35"
+        material="color: #001824; opacity: 0.96; transparent: true; side: double">
+      </a-plane>
+      <a-plane position="0 0.177 0.001" width="0.42" height="0.005"
+        material="color: #00BCD4; opacity: 1; side: double">
+      </a-plane>
+      <a-text value="LIVE READINGS" align="center" color="#80DEEA"
+        width="1.35" position="0 0.130 0.006" scale="0.62 0.62 0.62">
+      </a-text>
+      <a-text id="temp-val" value="23.4°C" align="center" color="#00FF7F"
+        width="1.55" position="0 0.060 0.006">
+      </a-text>
+      <a-text value="Temperature" align="center" color="#546E7A"
+        width="1.1" position="0 0.010 0.006" scale="0.6 0.6 0.6">
+      </a-text>
+      <a-text id="hum-val" value="48% RH" align="center" color="#40C4FF"
+        width="1.55" position="0 -0.065 0.006">
+      </a-text>
+      <a-text value="Humidity" align="center" color="#546E7A"
+        width="1.1" position="0 -0.115 0.006" scale="0.6 0.6 0.6">
+      </a-text>
+      <a-entity id="status-pill" position="0 -0.148 0.006">
+        <a-plane id="status-bg" width="0.26" height="0.042"
+          material="color: #00695C; opacity: 0.95; side: double">
+        </a-plane>
+        <a-text id="status-txt" value="✓  SAFE" align="center" color="#A5D6A7"
+          width="1.05" position="0 0 0.004" scale="0.76 0.76 0.76"
+          animation__pulse="property: opacity; from: 0.45; to: 1;
+                            dur: 1100; loop: true; dir: alternate">
+        </a-text>
+      </a-entity>
+    </a-entity>
+
+    <!-- ─────────────────────────────────── -->
+    <!-- 4. STATS CARDS ROW                  -->
+    <!-- ─────────────────────────────────── -->
+    <a-entity position="-0.33 -0.175 0.015"
+      animation__popin="property: scale; from: 0.01 0.01 0.01; to: 1 1 1;
+                        dur: 620; easing: easeOutBack; delay: 1050">
+      <a-plane width="0.285" height="0.215"
+        material="color: #00302A; opacity: 0.95; transparent: true; side: double">
+      </a-plane>
+      <a-plane position="0 0.109 0.001" width="0.285" height="0.005"
+        material="color: #1DE9B6; opacity: 1; side: double">
+      </a-plane>
+      <a-text value="99.8%" align="center" color="#1DE9B6" width="1.1"
+        position="0 0.045 0.006"
+        animation__bounce="property: scale; from: 2.5 2.5 2.5; to: 1 1 1;
+                            dur: 500; delay: 1650; easing: easeOutBounce">
+      </a-text>
+      <a-text value="Cloud" align="center" color="#B2DFDB" width="0.92"
+        position="0 -0.032 0.006" scale="0.66 0.66 0.66">
+      </a-text>
+      <a-text value="Delivery" align="center" color="#B2DFDB" width="0.92"
+        position="0 -0.068 0.006" scale="0.66 0.66 0.66">
+      </a-text>
+    </a-entity>
+
+    <a-entity position="0 -0.175 0.015"
+      animation__popin="property: scale; from: 0.01 0.01 0.01; to: 1 1 1;
+                        dur: 620; easing: easeOutBack; delay: 1250">
+      <a-plane width="0.285" height="0.215"
+        material="color: #00302A; opacity: 0.95; transparent: true; side: double">
+      </a-plane>
+      <a-plane position="0 0.109 0.001" width="0.285" height="0.005"
+        material="color: #00BCD4; opacity: 1; side: double">
+      </a-plane>
+      <a-text value="±0.3°C" align="center" color="#80DEEA" width="1.1"
+        position="0 0.045 0.006"
+        animation__bounce="property: scale; from: 2.5 2.5 2.5; to: 1 1 1;
+                            dur: 500; delay: 1850; easing: easeOutBounce">
+      </a-text>
+      <a-text value="Temp" align="center" color="#B2DFDB" width="0.92"
+        position="0 -0.032 0.006" scale="0.66 0.66 0.66">
+      </a-text>
+      <a-text value="Accuracy" align="center" color="#B2DFDB" width="0.92"
+        position="0 -0.068 0.006" scale="0.66 0.66 0.66">
+      </a-text>
+    </a-entity>
+
+    <a-entity position="0.33 -0.175 0.015"
+      animation__popin="property: scale; from: 0.01 0.01 0.01; to: 1 1 1;
+                        dur: 620; easing: easeOutBack; delay: 1450">
+      <a-plane width="0.285" height="0.215"
+        material="color: #00302A; opacity: 0.95; transparent: true; side: double">
+      </a-plane>
+      <a-plane position="0 0.109 0.001" width="0.285" height="0.005"
+        material="color: #FFCA28; opacity: 1; side: double">
+      </a-plane>
+      <a-text value="+90" align="center" color="#FFE082" width="1.1"
+        position="0 0.045 0.006"
+        animation__bounce="property: scale; from: 2.5 2.5 2.5; to: 1 1 1;
+                            dur: 500; delay: 2050; easing: easeOutBounce">
+      </a-text>
+      <a-text value="Days" align="center" color="#B2DFDB" width="0.92"
+        position="0 -0.032 0.006" scale="0.66 0.66 0.66">
+      </a-text>
+      <a-text value="Battery" align="center" color="#B2DFDB" width="0.92"
+        position="0 -0.068 0.006" scale="0.66 0.66 0.66">
+      </a-text>
+    </a-entity>
+
+    <!-- ─────────────────────────────────── -->
+    <!-- 5. GEMINI AI BADGE                  -->
+    <!-- ─────────────────────────────────── -->
+    <a-entity position="0 -0.48 0.015"
+      animation__popin="property: scale; from: 0.01 0.01 0.01; to: 1 1 1;
+                        dur: 600; easing: easeOutBack; delay: 1700">
+      <a-plane width="0.70" height="0.125"
+        material="color: #1A1248; opacity: 0.96; transparent: true; side: double">
+      </a-plane>
+      <a-plane position="0 0.064 0.001" width="0.70" height="0.004"
+        material="color: #7C4DFF; opacity: 1; side: double">
+      </a-plane>
+      <a-text value="Gemini AI  |  Anomaly Detection" align="center"
+        color="#D1C4E9" width="2.1" position="0 0 0.006" scale="0.82 0.82 0.82">
+      </a-text>
+    </a-entity>
+
+    <!-- ─────────────────────────────────── -->
+    <!-- 6. FLOATING DATA PARTICLES          -->
+    <!-- ─────────────────────────────────── -->
+    <a-entity id="particles" position="0.30 0 0.05"></a-entity>
+
+  </a-entity><!-- end mindar-image-target -->
+
+</a-scene>
+
+
+<!-- ════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════ -->
+<script>
+const scene       = document.querySelector('a-scene');
+const startScreen = document.getElementById('start-screen');
+const startBtn    = document.getElementById('start-btn');
+const ssNote      = document.getElementById('ss-note');
+const safariHint  = document.getElementById('safari-hint');
+const loadingBar  = document.getElementById('loading-bar-wrap');
+const hint        = document.getElementById('scan-hint');
+const badge       = document.getElementById('corner-badge');
+const errorBox    = document.getElementById('error-box');
+
+// ── Show error message on screen ───────────────────────
+function showError(msg) {
+  errorBox.textContent = msg;
+  errorBox.style.display = 'block';
+}
+
+// ── Detect non-Safari iOS browsers (they block camera) ─
+function isIOSNonSafari() {
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  // Safari on iOS contains "Safari" but not "CriOS", "FxiOS", "OPiOS"
+  const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua);
+  return isIOS && !isSafari;
+}
+
+// ── Patch any video MindAR injects — iOS needs playsinline ─
+new MutationObserver((mutations) => {
+  mutations.forEach(({ addedNodes }) => {
+    addedNodes.forEach((node) => {
+      if (node.nodeName === 'VIDEO') {
+        node.setAttribute('playsinline', '');
+        node.setAttribute('webkit-playsinline', '');
+        node.muted      = true;
+        node.playsInline = true;
+      }
+    });
+  });
+}).observe(document.body, { childList: true, subtree: true });
+
+// ── Wait for scene to load BEFORE enabling the button ──
+// This guarantees the button tap is always synchronous with
+// mindar.start() — the pattern iOS requires for camera access.
+scene.addEventListener('loaded', () => {
+  if (isIOSNonSafari()) {
+    safariHint.style.display = 'block';
+    ssNote.textContent = 'Camera requires Safari on iPhone.';
+    return; // button stays disabled — user must switch browser
+  }
+  startBtn.disabled    = false;
+  startBtn.textContent = 'Launch AR Experience';
+  ssNote.textContent   = 'Allow camera access when prompted.';
+}, { once: true });
+
+// ── Start AR — always called after scene is loaded ─────
+function startAR() {
+  startScreen.classList.add('hidden');
+  setTimeout(() => startScreen.remove(), 700);
+  loadingBar.classList.add('visible');
+
+  // mindar-image-system is guaranteed to exist here (scene already loaded)
+  const mindar = scene.systems['mindar-image-system'];
+  if (!mindar) {
+    showError('AR system not found. Please reload the page.');
+    return;
+  }
+
+  // start() is called synchronously inside the click handler — iOS allows camera
+  mindar.start().catch((err) => {
+    console.error('MindAR start error:', err);
+    if (err.name === 'NotAllowedError') {
+      showError('Camera access was denied. Go to Settings → Safari → Camera and allow this site, then reload.');
+    } else if (err.name === 'NotFoundError') {
+      showError('No camera found on this device.');
+    } else {
+      showError('Camera error: ' + err.message + '. Try reloading in Safari.');
+    }
+    loadingBar.classList.remove('visible');
+  });
+
+  setTimeout(() => {
+    loadingBar.classList.remove('visible');
+    hint.classList.add('visible');
+  }, 3500);
+}
+
+// ── Target found / lost ─────────────────────────────────
+scene.addEventListener('targetFound', () => {
+  hint.classList.remove('visible');
+  badge.classList.add('visible');
+  spawnParticles();
+});
+scene.addEventListener('targetLost', () => {
+  hint.classList.add('visible');
+  badge.classList.remove('visible');
+});
+
+// ── Live sensor simulation ──────────────────────────────
+const BASE_TEMP = 23.4;
+const BASE_HUM  = 48;
+let tick = 0;
+
+function refreshReadings() {
+  tick++;
+  const temp = parseFloat(
+    (BASE_TEMP + Math.sin(tick * 0.28) * 0.9 + (Math.random() - 0.5) * 0.15).toFixed(1)
+  );
+  const hum = Math.round(BASE_HUM + Math.cos(tick * 0.21) * 3 + (Math.random() - 0.5));
+  const safe = temp >= 15 && temp <= 25 && hum >= 30 && hum <= 60;
+
+  const tEl = document.getElementById('temp-val');
+  const hEl = document.getElementById('hum-val');
+  const sEl = document.getElementById('status-txt');
+  const sBg = document.getElementById('status-bg');
+  const dT  = document.getElementById('dev-temp');
+  const dH  = document.getElementById('dev-hum');
+  const led = document.getElementById('led');
+
+  if (tEl) tEl.setAttribute('value', `${temp}°C`);
+  if (hEl) hEl.setAttribute('value', `${hum}% RH`);
+  if (dT)  dT.setAttribute('value',  `${temp}C`);
+  if (dH)  dH.setAttribute('value',  `${hum}%`);
+
+  if (safe) {
+    if (tEl) tEl.setAttribute('color', '#00FF7F');
+    if (sEl) { sEl.setAttribute('value', '✓  SAFE');  sEl.setAttribute('color', '#A5D6A7'); }
+    if (sBg) sBg.setAttribute('material', 'color: #00695C; opacity: 0.95; side: double');
+    if (led) led.setAttribute('material', 'color: #00FF7F; emissive: #00FF7F; emissiveIntensity: 1');
+  } else {
+    if (tEl) tEl.setAttribute('color', '#FF5252');
+    if (sEl) { sEl.setAttribute('value', '⚠  ALERT'); sEl.setAttribute('color', '#EF9A9A'); }
+    if (sBg) sBg.setAttribute('material', 'color: #7F1919; opacity: 0.95; side: double');
+    if (led) led.setAttribute('material', 'color: #FF5252; emissive: #FF5252; emissiveIntensity: 1');
+  }
+}
+setInterval(refreshReadings, 2200);
+
+// ── Floating particles ──────────────────────────────────
+let particlesSpawned = false;
+function spawnParticles() {
+  if (particlesSpawned) return;
+  particlesSpawned = true;
+  const container = document.getElementById('particles');
+  if (!container) return;
+  const palette = ['#00BCD4', '#1DE9B6', '#40C4FF', '#80DEEA', '#B2EBF2'];
+  for (let i = 0; i < 10; i++) {
+    const dot   = document.createElement('a-sphere');
+    const ox    = (Math.random() - 0.5) * 0.35;
+    const oy    = (Math.random() - 0.5) * 0.45;
+    const color = palette[Math.floor(Math.random() * palette.length)];
+    const delay = Math.random() * 3500;
+    const dur   = 2200 + Math.random() * 1600;
+    dot.setAttribute('radius', (0.006 + Math.random() * 0.005).toFixed(3));
+    dot.setAttribute('position', `${ox} ${oy} 0`);
+    dot.setAttribute('material',
+      `color: ${color}; emissive: ${color}; emissiveIntensity: 0.85; opacity: 0.75; transparent: true`);
+    dot.setAttribute('animation__rise',
+      `property: position; from: ${ox} ${oy} 0; to: ${ox} ${oy + 0.6} 0;
+       dur: ${dur}; delay: ${delay}; loop: true; easing: linear`);
+    dot.setAttribute('animation__fade',
+      `property: material.opacity; from: 0.75; to: 0;
+       dur: ${dur}; delay: ${delay}; loop: true; easing: linear`);
+    container.appendChild(dot);
+  }
+}
+</script>
+
+</body>
+</html>
